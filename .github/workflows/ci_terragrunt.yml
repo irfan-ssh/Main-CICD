@@ -1,4 +1,6 @@
-name: CI Plan
+name: CI_stage
+on:
+  workflow_call:
 
 jobs:
   terragrunt:

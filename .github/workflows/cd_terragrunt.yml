@@ -1,5 +1,6 @@
-name: CD Apply
-
+name: CD_stage
+on:
+  workflow_call:
 jobs:
   terragrunt:
     name: "Apply Terraform with Terragrunt"
