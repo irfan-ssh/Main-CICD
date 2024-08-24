@@ -9,7 +9,7 @@ jobs:
 
     env:
       TERRAGRUNT_TFPATH: /usr/local/bin/terraform
-      tf_working_dir: './terragrunt-code'
+      tf_working_dir: './live/stg'
 
     permissions:
       id-token: write
