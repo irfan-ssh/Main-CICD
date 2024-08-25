@@ -70,8 +70,7 @@ jobs:
       - name: Run HCL Format
         working-directory: '${{ env.tf_working_dir }}'
         run: |
-          terragrunt hclfmt
-
+          terragrunt run-all hclfmt
       - name: TERRAGRUNT INIT
         run: |
           pwd
@@ -84,7 +83,7 @@ jobs:
           find . -name ".terragrunt" -type d -print
         working-directory: '${{ env.tf_working_dir }}'
 
-        - name: TERRAGRUNT PLAN
+      - name: TERRAGRUNT PLAN
         run: | 
           pwd
           echo "current working direcotry path::"
