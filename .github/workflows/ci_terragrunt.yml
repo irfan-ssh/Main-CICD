@@ -1,5 +1,6 @@
 name: CI_stage
-'on':
+
+on:
   workflow_call:
     secrets:
       AWS_ROLE_ARN:
