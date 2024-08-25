@@ -49,14 +49,21 @@ jobs:
 
       - name: Run HCL Format
         working-directory: ${{ env.tf_working_dir }}
-        run: terragrunt hclfmt
+        run: |
+          ls -al
+          pwd
+          echo "current working directory path"
+          terragrunt hclfmt
 
       - name: Terragrunt Init
         working-directory: ${{ env.tf_working_dir }}
         run: |
-          terragrunt run-all init -terragrunt-provider-cache -no-color --terragrunt-non-interactive
+          ls -al
+          pwd
+          echo "current working directory path"
+          terragrunt run-all init -no-color --terragrunt-provider-cache
 
       - name: Terragrunt Plan
         working-directory: ${{ env.tf_working_dir }}
         run: |
-          terragrunt run-all plan -terragrunt-provider-cache -no-color -out=plan.output --terragrunt-non-interactive
+          terragrunt run-all plan -no-color -out=plan.output -terragrunt-provider-cache --terragrunt-non-interactive
