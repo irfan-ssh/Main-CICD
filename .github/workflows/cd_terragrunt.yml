@@ -1,6 +1,18 @@
 name: CD_stage
 on:
   workflow_call:
+    # inputs:
+    #   AWS_ROLE_ARN:
+    #     required: true
+    #     type: string
+    #   AWS_REGION:
+    #     required: true
+    #     type: string
+      secrets:
+      AWS_ROLE_ARN:
+        required: true
+      AWS_REGION:
+        required: true
 jobs:
   terragrunt:
     name: "Apply Terraform with Terragrunt"
