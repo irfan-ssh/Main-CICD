@@ -76,7 +76,7 @@ jobs:
         run: |
           pwd
           echo "current working directory path:"
-          terragrunt run-all init --terragrunt-provider-cache --terragrunt-non-interactive
+          terragrunt run-all init -terragrunt-provider-cache --terragrunt-non-interactive
           echo "Terragrunt init completed."
           pwd
           ls -ashl
@@ -84,12 +84,13 @@ jobs:
           find . -name ".terragrunt" -type d -print
         working-directory: '${{ env.tf_working_dir }}'
 
-      - name: TERRAGRUNT PLAN
-        run: |
+        - name: TERRAGRUNT PLAN
+        run: | 
           pwd
-          echo "current working directory path:"
-          terragrunt run-all plan --terragrunt-provider-cache --out=plan.output --terragrunt-non-interactive
-          echo "Terragrunt plan completed."
+          echo "current working direcotry path::"
+          pwd
+          terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
+          echo "current working direcotry path::"
           pwd
           ls -ashl
           echo "Searching for plan.output..."
