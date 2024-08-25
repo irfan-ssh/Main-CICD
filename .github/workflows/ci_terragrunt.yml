@@ -1,14 +1,7 @@
 name: CI_stage
 on:
   workflow_call:
-    # inputs:
-    #   AWS_ROLE_ARN:
-    #     required: true
-    #     type: string
-    #   AWS_REGION:
-    #     required: true
-    #     type: string
-      secrets:
+    secrets:
       AWS_ROLE_ARN:
         required: true
       AWS_REGION:
@@ -62,8 +55,8 @@ jobs:
         working-directory: ${{ env.tf_working_dir }}
         run: |
           terragrunt run-all init -terragrunt-provider-cache -no-color --terragrunt-non-interactive
+
       - name: Terragrunt Plan
         working-directory: ${{ env.tf_working_dir }}
         run: |
           terragrunt run-all plan -terragrunt-provider-cache -no-color -out=plan.output --terragrunt-non-interactive
-# test
