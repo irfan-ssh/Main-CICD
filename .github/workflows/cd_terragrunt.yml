@@ -39,10 +39,13 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Add SSH Key to GitHub
+      - name: Remove old GitHub key from known_hosts
         run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan github.com >> ~/.ssh/id_rsa
+          ssh-keygen -R github.com
+
+      - name: Add new GitHub key to known_hosts
+        run: |
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
