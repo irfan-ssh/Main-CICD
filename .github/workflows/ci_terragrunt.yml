@@ -30,6 +30,11 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      - name: Create .ssh directory
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
       - name: Remove old GitHub key from known_hosts
         run: |
           ssh-keygen -R github.com
@@ -37,6 +42,7 @@ jobs:
       - name: Add new GitHub key to known_hosts
         run: |
           ssh-keyscan github.com >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
