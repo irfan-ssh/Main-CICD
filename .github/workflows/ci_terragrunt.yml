@@ -55,15 +55,27 @@ jobs:
           echo "current working directory path"
           terragrunt hclfmt
 
-      - name: Terragrunt Init
-        working-directory: ${{ env.tf_working_dir }}
-        run: |
-          ls -al
-          pwd
-          echo "current working directory path"
-          terragrunt run-all init -no-color --terragrunt-provider-cache
+      - name: TERRAGRUNT INIT
+      run: |
+        pwd
+        echo "current working direcotry path::"
+        terragrunt run-all init -terragrunt-provider-cache --terragrunt-non-interactive
+        pwd
+        ls -ashl
+        echo "Searching for .terragrunt..."
+        find . -name ".terragrunt" -type f -print
+      working-directory: ${{ env.tf_working_dir }}
 
-      - name: Terragrunt Plan
-        working-directory: ${{ env.tf_working_dir }}
-        run: |
-          terragrunt run-all plan -no-color -out=plan.output -terragrunt-provider-cache --terragrunt-non-interactive
+    - name: TERRAGRUNT PLAN
+      run: | 
+        pwd
+        echo "current working direcotry path::"
+        pwd
+        terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
+        echo "current working direcotry path::"
+        pwd
+        ls -ashl
+        echo "Searching for plan.output..."
+        find . -name "plan.output" -type f -print
+        # terragrunt show -no-color plan.output >> plan_output
+      working-directory: ${{ env.tf_working_dir }}
