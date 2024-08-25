@@ -28,24 +28,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      # - name: Set up SSH
+      #   uses: webfactory/ssh-agent@v0.5.3
+      #   with:
+      #     ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Create .ssh directory
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
+      # - name: Create .ssh directory
+      #   run: |
+      #     mkdir -p ~/.ssh
+      #     chmod 700 ~/.ssh
 
-      - name: Remove old GitHub key from known_hosts
-        run: |
-          ssh-keygen -R github.com || true
+      # - name: Remove old GitHub key from known_hosts
+      #   run: |
+      #     ssh-keygen -R github.com || true
 
-      - name: Add new GitHub key to known_hosts
-        run: |
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
+      # - name: Add new GitHub key to known_hosts
+      #   run: |
+      #     ssh-keyscan github.com >> ~/.ssh/known_hosts
+      #     chmod 600 ~/.ssh/known_hosts
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -66,9 +66,6 @@ jobs:
           role-to-assume: '${{ secrets.AWS_ROLE_ARN }}'
           role-session-name: GitHubActions
           aws-region: '${{ secrets.AWS_REGION }}'
-      # Verify that the AWS credentials are working correctly
-      - name: Verify AWS credentials
-        run: aws sts get-caller-identity
 
       - name: Run HCL Format
         working-directory: '${{ env.tf_working_dir }}'
