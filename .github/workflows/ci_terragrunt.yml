@@ -83,7 +83,6 @@ jobs:
           pwd
           ls -ashl
           echo "Searching for .terragrunt cache..."
-          find . -name ".terragrunt" -type d -print
         working-directory: '${{ env.tf_working_dir }}'
 
       - name: TERRAGRUNT PLAN
@@ -91,10 +90,9 @@ jobs:
           pwd
           echo "current working direcotry path::"
           pwd
-          terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
+          terragrunt run-all plan
           echo "current working direcotry path::"
           pwd
           ls -ashl
           echo "Searching for plan.output..."
-          find . -name "plan.output" -type f -print
         working-directory: '${{ env.tf_working_dir }}'
