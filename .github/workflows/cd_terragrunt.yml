@@ -35,7 +35,7 @@ jobs:
       image: 'ghcr.io/irfan-ssh/terragrunt-docker-image:latest'
 
     env:
-      TERRAGRUNT_TFPATH: /usr/local/bin/terraform
+      # TERRAGRUNT_TFPATH: /usr/local/bin/terraform
       tf_working_dir: ${{ inputs.DIRECTORY_PATH }}
 
     permissions:
