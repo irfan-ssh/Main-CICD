@@ -2,6 +2,20 @@ name: CD_stage
 
 on:
   workflow_call:
+    inputs:
+      STAGING_ACCOUNT_ID:
+        required: true
+        type: string
+      PRODUCTION_ACCOUNT_ID:
+        required: true
+        type: string
+      ENABLE_PROD:
+        required: false
+        type: string
+      GHACTION_ROLE_NAME:
+        required: false
+        type: string
+        default: 'github-oidc-role'
     secrets:
       AWS_ROLE_ARN:
         required: true
@@ -52,7 +66,7 @@ jobs:
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: '${{ secrets.AWS_ROLE_ARN }}'
+          role-to-assume: arn:aws:iam::${{ inputs.STAGING_ACCOUNT_ID }}:role/${{ inputs.GHACTION_ROLE_NAME }}
           role-session-name: GitHubActions
           aws-region: '${{ secrets.AWS_REGION }}'
 
