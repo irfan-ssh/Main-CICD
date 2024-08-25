@@ -61,11 +61,14 @@ jobs:
         working-directory: '${{ env.tf_working_dir }}'
 
       - name: Configure AWS credentials with OIDC
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: '${{ secrets.AWS_ROLE_ARN }}'
           role-session-name: GitHubActions
           aws-region: '${{ secrets.AWS_REGION }}'
+      # Verify that the AWS credentials are working correctly
+      - name: Verify AWS credentials
+        run: aws sts get-caller-identity
 
       - name: Run HCL Format
         working-directory: '${{ env.tf_working_dir }}'
