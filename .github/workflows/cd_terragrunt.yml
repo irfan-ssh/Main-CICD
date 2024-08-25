@@ -1,26 +1,21 @@
 name: CD_stage
+
 on:
   workflow_call:
-    # inputs:
-    #   AWS_ROLE_ARN:
-    #     required: true
-    #     type: string
-    #   AWS_REGION:
-    #     required: true
-    #     type: string
-      secrets:
+    secrets:
       AWS_ROLE_ARN:
         required: true
       AWS_REGION:
         required: true
       SSH_PRIVATE_KEY:
         required: true
+
 jobs:
   terragrunt:
     name: "Apply Terraform with Terragrunt"
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/irfan-ssh/terragrunt-docker-image:latest # Replace with your actual image
+      image: 'ghcr.io/irfan-ssh/terragrunt-docker-image:latest'
 
     env:
       TERRAGRUNT_TFPATH: /usr/local/bin/terraform
@@ -34,24 +29,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Create .ssh directory
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-
-      - name: Remove old GitHub key from known_hosts
-        run: |
-          ssh-keygen -R github.com
-
-      - name: Add new GitHub key to known_hosts
-        run: |
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
+      # SSH setup steps are commented out because they are not needed
+      # for public repositories, but you can uncomment if needed.
+      # - name: Set up SSH
+      #   uses: webfactory/ssh-agent@v0.5.3
+      #   with:
+      #     ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -64,36 +47,54 @@ jobs:
           tgenv use 0.60.0
           terraform --version
           terragrunt --version
-        working-directory: ${{ env.tf_working_dir }}
+        working-directory: '${{ env.tf_working_dir }}'
 
       - name: Configure AWS credentials with OIDC
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: '${{ secrets.AWS_ROLE_ARN }}'
           role-session-name: GitHubActions
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: '${{ secrets.AWS_REGION }}'
 
-      - name: Terragrunt Init
-        working-directory: ${{ env.tf_working_dir }}
+      - name: TERRAGRUNT INIT
         run: |
-          terragrunt run-all init -terragrunt-provider-cache -no-color --terragrunt-non-interactive
-      - name: Terragrunt Plan
-        working-directory: ${{ env.tf_working_dir }}
-        run: |
-          terragrunt run-all plan -terragrunt-provider-cache -no-color -out=plan.output --terragrunt-non-interactive
+          pwd
+          echo "current working directory path:"
+          terragrunt run-all init -terragrunt-provider-cache --terragrunt-non-interactive
+          echo "Terragrunt init completed."
+          pwd
+          ls -ashl
+          echo "Searching for .terragrunt cache..."
+        working-directory: '${{ env.tf_working_dir }}'
 
-      - name: Terragrunt Apply
-        working-directory: ${{ env.tf_working_dir }}
+      - name: TERRAGRUNT PLAN
         run: |
-          terragrunt run-all apply -terragrunt-provider-cache -no-color plan.output --terragrunt-non-interactive
+          pwd
+          echo "current working directory path:"
+          terragrunt run-all plan -terragrunt-provider-cache --terragrunt-non-interactive -out=plan.output
+          echo "Terragrunt plan completed."
+          pwd
+          ls -ashl
+          echo "Searching for plan.output..."
+        working-directory: '${{ env.tf_working_dir }}'
+
+      - name: TERRAGRUNT APPLY
+        run: |
+          pwd
+          echo "current working directory path:"
+          terragrunt run-all apply -terragrunt-provider-cache --terragrunt-non-interactive plan.output
+          echo "Terragrunt apply completed."
+          pwd
+          ls -ashl
+        working-directory: '${{ env.tf_working_dir }}'
 
       - name: List Folder
-        working-directory: ${{ env.tf_working_dir }}
         run: |
           ls -al
+        working-directory: '${{ env.tf_working_dir }}'
 
       - name: Clean up Terraform State
-        working-directory: ${{ env.tf_working_dir }}
         run: |
           terragrunt run-all refresh
           rm -rf .terraform
+        working-directory: '${{ env.tf_working_dir }}'
