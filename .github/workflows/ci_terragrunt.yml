@@ -8,6 +8,7 @@ name: CI_stage
         required: true
       SSH_PRIVATE_KEY:
         required: true
+
 jobs:
   terragrunt:
     name: Terraform with Terragrunt
@@ -17,6 +18,7 @@ jobs:
     env:
       TERRAGRUNT_TFPATH: /usr/local/bin/terraform
       tf_working_dir: ./live/stg
+
     permissions:
       id-token: write
       contents: read
@@ -37,7 +39,7 @@ jobs:
 
       - name: Remove old GitHub key from known_hosts
         run: |
-          ssh-keygen -R github.com
+          ssh-keygen -R github.com || true
 
       - name: Add new GitHub key to known_hosts
         run: |
@@ -49,7 +51,6 @@ jobs:
         
       - name: Verify Terraform and Terragrunt Installation
         run: |
-          ls -ashl
           tfenv install 1.8.5
           tgenv install 0.60.0
           tfenv use 1.8.5
@@ -57,42 +58,39 @@ jobs:
           terraform --version
           terragrunt --version
         working-directory: '${{ env.tf_working_dir }}'
+
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: '${{ secrets.AWS_ROLE_ARN }}'
           role-session-name: GitHubActions
           aws-region: '${{ secrets.AWS_REGION }}'
+
       - name: Run HCL Format
         working-directory: '${{ env.tf_working_dir }}'
         run: |
-          ls -al
-          pwd
-          echo "current working directory path"
-          terragrunt run-all hclfmt
+          terragrunt hclfmt
 
       - name: TERRAGRUNT INIT
-        run: >
+        run: |
           pwd
-          echo "current working direcotry path::"
-          terragrunt run-all init -terragrunt-provider-cache
-          --terragrunt-non-interactive
+          echo "current working directory path:"
+          terragrunt run-all init --terragrunt-provider-cache --terragrunt-non-interactive
+          echo "Terragrunt init completed."
           pwd
           ls -ashl
-          echo "Searching for .terragrunt..."
-          find . -name ".terragrunt" -type f -print
+          echo "Searching for .terragrunt cache..."
+          find . -name ".terragrunt" -type d -print
         working-directory: '${{ env.tf_working_dir }}'
+
       - name: TERRAGRUNT PLAN
-        run: >
+        run: |
           pwd
-          echo "current working direcotry path::"
-          pwd
-          terragrunt run-all plan -no-color -out=plan.output
-          --terragrunt-non-interactive
-          echo "current working direcotry path::"
+          echo "current working directory path:"
+          terragrunt run-all plan --terragrunt-provider-cache --out=plan.output --terragrunt-non-interactive
+          echo "Terragrunt plan completed."
           pwd
           ls -ashl
           echo "Searching for plan.output..."
           find . -name "plan.output" -type f -print
-          # terragrunt show -no-color plan.output >> plan_output
         working-directory: '${{ env.tf_working_dir }}'
