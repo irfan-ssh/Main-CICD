@@ -66,16 +66,16 @@ jobs:
         find . -name ".terragrunt" -type f -print
       working-directory: ${{ env.tf_working_dir }}
 
-    - name: TERRAGRUNT PLAN
-      run: | 
-        pwd
-        echo "current working direcotry path::"
-        pwd
-        terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
-        echo "current working direcotry path::"
-        pwd
-        ls -ashl
-        echo "Searching for plan.output..."
-        find . -name "plan.output" -type f -print
-        # terragrunt show -no-color plan.output >> plan_output
-      working-directory: ${{ env.tf_working_dir }}
+      - name: TERRAGRUNT PLAN
+        run: | 
+          pwd
+          echo "current working direcotry path::"
+          pwd
+          terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
+          echo "current working direcotry path::"
+          pwd
+          ls -ashl
+          echo "Searching for plan.output..."
+          find . -name "plan.output" -type f -print
+          # terragrunt show -no-color plan.output >> plan_output
+        working-directory: ${{ env.tf_working_dir }}
