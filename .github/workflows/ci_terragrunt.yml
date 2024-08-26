@@ -90,28 +90,28 @@ jobs:
       #     tfenv use $TERRAFORM_VERSION
       #     terraform --version
       #   working-directory: '${{ env.tf_working_dir }}'
-    - name: Install jq
-      run: sudo apt-get install jq
+      - name: Install jq
+        run: sudo apt-get install jq
+        
+      - name: Load Terragrunt Config
+        id: load-terragrunt-config
+        run: |
+          export TERRAGRUNT_VERSION=$(terragrunt locals | jq -r '.terragrunt_version')
+          export TERRAFORM_VERSION=$(terragrunt locals | jq -r '.terraform_version')
+        working-directory: '${{ env.tf_working_dir }}'
       
-    - name: Load Terragrunt Config
-      id: load-terragrunt-config
-      run: |
-        export TERRAGRUNT_VERSION=$(terragrunt locals | jq -r '.terragrunt_version')
-        export TERRAFORM_VERSION=$(terragrunt locals | jq -r '.terraform_version')
-      working-directory: '${{ env.tf_working_dir }}'
-    
-    - name: Set Terragrunt and Terraform Versions
-      run: |
-        echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
-        tgenv install $TERRAGRUNT_VERSION
-        tgenv use $TERRAGRUNT_VERSION
-        terragrunt --version
-    
-        echo "Using Terraform version: $TERRAFORM_VERSION"
-        tfenv install $TERRAFORM_VERSION
-        tfenv use $TERRAFORM_VERSION
-        terraform --version
-      working-directory: '${{ env.tf_working_dir }}'
+      - name: Set Terragrunt and Terraform Versions
+        run: |
+          echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
+          tgenv install $TERRAGRUNT_VERSION
+          tgenv use $TERRAGRUNT_VERSION
+          terragrunt --version
+      
+          echo "Using Terraform version: $TERRAFORM_VERSION"
+          tfenv install $TERRAFORM_VERSION
+          tfenv use $TERRAFORM_VERSION
+          terraform --version
+        working-directory: '${{ env.tf_working_dir }}'
 
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
