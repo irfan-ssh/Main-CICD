@@ -76,17 +76,19 @@ jobs:
       #     terraform --version
       #     terragrunt --version
       #   working-directory: '${{ env.tf_working_dir }}'
-      - name: Set Terragrunt Version from .terragrunt-version
+      - name: Set Terragrunt and Terraform Versions from .terragrunt-version and .terraform-version
         run: |
+          cd ${{ env.tf_working_dir }}
           TERRAGRUNT_VERSION=$(cat .terragrunt-version)
           echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
           tgenv install $TERRAGRUNT_VERSION
           tgenv use $TERRAGRUNT_VERSION
           terragrunt --version
+
           TERRAFORM_VERSION=$(cat .terraform-version)
-          echo "Using Terragrunt version: $TERRAFORM_VERSION"
-          tgenv install $TERRAFORM_VERSION
-          tgenv use $TERRAFORM_VERSION
+          echo "Using Terraform version: $TERRAFORM_VERSION"
+          tfenv install $TERRAFORM_VERSION
+          tfenv use $TERRAFORM_VERSION
           terraform --version
         working-directory: '${{ env.tf_working_dir }}'
 
