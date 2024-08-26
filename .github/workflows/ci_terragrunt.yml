@@ -95,8 +95,8 @@ jobs:
         
       - name: Extract Terragrunt and Terraform Versions
         run: |
-          export TERRAGRUNT_VERSION=$(terragrunt locals --terragrunt-working-dir="./live/stg" | jq -r '.terragrunt_version')
-          export TERRAFORM_VERSION=$(terragrunt locals --terragrunt-working-dir="./live/stg" | jq -r '.terraform_version')
+          export TERRAGRUNT_VERSION=$(terragrunt locals --terragrunt-working-dir="./" | jq -r '.terragrunt_version')
+          export TERRAFORM_VERSION=$(terragrunt locals --terragrunt-working-dir="./" | jq -r '.terraform_version')
           echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
           echo "Using Terraform version: $TERRAFORM_VERSION"
 
