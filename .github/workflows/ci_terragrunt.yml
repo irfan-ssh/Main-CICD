@@ -79,7 +79,6 @@ jobs:
       - name: Set Terragrunt Version from .terragrunt-version
         run: |
           cd ${{ env.tf_working_dir }}
-          cd ../..
           TERRAGRUNT_VERSION=$(cat .terragrunt-version)
           echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
           tgenv install $TERRAGRUNT_VERSION
