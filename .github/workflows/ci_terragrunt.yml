@@ -90,8 +90,8 @@ jobs:
       #     tfenv use $TERRAFORM_VERSION
       #     terraform --version
       #   working-directory: '${{ env.tf_working_dir }}'
-      - name: Install jq
-        run: sudo apt-get install jq
+      # - name: Install jq
+      #   run: sudo apt-get install jq
         
       - name: Load Terragrunt Config
         id: load-terragrunt-config
