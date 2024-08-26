@@ -107,7 +107,7 @@ jobs:
           tfenv install $TERRAFORM_VERSION
           tfenv use $TERRAFORM_VERSION
           terraform --version
-        working-directory: '${{ env.tf_working_dir }}'
+        working-directory: './'
 
 
 
