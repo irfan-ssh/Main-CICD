@@ -94,28 +94,37 @@ jobs:
       #   run: sudo apt-get install jq
         
       - name: Extract Terragrunt and Terraform Versions
-        run: |
-          pwd
-          ls -al
-          export TERRAGRUNT_VERSION=$(terragrunt locals --terragrunt-working-dir="./" | jq -r '.terragrunt_version')
-          export TERRAFORM_VERSION=$(terragrunt locals --terragrunt-working-dir="./" | jq -r '.terraform_version')
-          pwd
-          ls -al
-          echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
-          echo "Using Terraform version: $TERRAFORM_VERSION"
+      run: |
+        echo "Current directory:"
+        pwd
+        echo "Directory contents:"
+        ls -al
 
-          tgenv install $TERRAGRUNT_VERSION
-          tgenv use $TERRAGRUNT_VERSION
-          terragrunt --version
+        echo "Extracting Terragrunt and Terraform versions..."
+        terragrunt locals --terragrunt-working-dir="./" | jq .
 
-          tfenv install $TERRAFORM_VERSION
-          tfenv use $TERRAFORM_VERSION
-          terraform --version
-          pwd
-          ls -al
-        working-directory: './'
+        export TERRAGRUNT_VERSION=$(terragrunt locals --terragrunt-working-dir="./" | jq -r '.terragrunt_version')
+        export TERRAFORM_VERSION=$(terragrunt locals --terragrunt-working-dir="./" | jq -r '.terraform_version')
 
+        echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
+        echo "Using Terraform version: $TERRAFORM_VERSION"
 
+        if [ -z "$TERRAGRUNT_VERSION" ] || [ -z "$TERRAFORM_VERSION" ]; then
+          echo "Error: Failed to extract version from terragrunt.hcl"
+          exit 1
+        fi
+
+        tgenv install $TERRAGRUNT_VERSION
+        tgenv use $TERRAGRUNT_VERSION
+        terragrunt --version
+
+        tfenv install $TERRAFORM_VERSION
+        tfenv use $TERRAFORM_VERSION
+        terraform --version
+
+        echo "Final directory contents:"
+        ls -al
+      working-directory: './'
 
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
