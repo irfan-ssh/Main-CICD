@@ -67,13 +67,23 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         
-      - name: Verify Terraform and Terragrunt Installation
+      # - name: Verify Terraform and Terragrunt Installation
+      #   run: |
+      #     tfenv install 1.8.5
+      #     tgenv install 0.60.0
+      #     tfenv use 1.8.5
+      #     tgenv use 0.60.0
+      #     terraform --version
+      #     terragrunt --version
+      #   working-directory: '${{ env.tf_working_dir }}'
+      - name: Set Terragrunt Version from .terragrunt-version
         run: |
-          tfenv install 1.8.5
-          tgenv install 0.60.0
-          tfenv use 1.8.5
-          tgenv use 0.60.0
-          terraform --version
+          cd ${{ env.tf_working_dir }}
+          cd ../..
+          TERRAGRUNT_VERSION=$(cat .terragrunt-version)
+          echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
+          tgenv install $TERRAGRUNT_VERSION
+          tgenv use $TERRAGRUNT_VERSION
           terragrunt --version
         working-directory: '${{ env.tf_working_dir }}'
 
