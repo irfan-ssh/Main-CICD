@@ -93,23 +93,12 @@ jobs:
       # - name: Install jq
       #   run: sudo apt-get install jq
         
-      - name: Load Terragrunt and Terraform Versions
+      - name: Extract Terragrunt and Terraform Versions
         run: |
           export TERRAGRUNT_VERSION=$(terragrunt locals | jq -r '.terragrunt_version')
           export TERRAFORM_VERSION=$(terragrunt locals | jq -r '.terraform_version')
-
-          echo "Terragrunt Version: $TERRAGRUNT_VERSION"
-          echo "Terraform Version: $TERRAFORM_VERSION"
-
-          if [ -z "$TERRAGRUNT_VERSION" ]; then
-            echo "Error: Terragrunt version not set!"
-            exit 1
-          fi
-
-          if [ -z "$TERRAFORM_VERSION" ]; then
-            echo "Error: Terraform version not set!"
-            exit 1
-          fi
+          echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
+          echo "Using Terraform version: $TERRAFORM_VERSION"
 
           tgenv install $TERRAGRUNT_VERSION
           tgenv use $TERRAGRUNT_VERSION
@@ -119,6 +108,7 @@ jobs:
           tfenv use $TERRAFORM_VERSION
           terraform --version
         working-directory: '${{ env.tf_working_dir }}'
+
 
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
