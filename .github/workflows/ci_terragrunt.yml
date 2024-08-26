@@ -83,6 +83,11 @@ jobs:
           tgenv install $TERRAGRUNT_VERSION
           tgenv use $TERRAGRUNT_VERSION
           terragrunt --version
+          TERRAFORM_VERSION=$(cat .terraform-version)
+          echo "Using Terragrunt version: $TERRAFORM_VERSION"
+          tgenv install $TERRAFORM_VERSION
+          tgenv use $TERRAFORM_VERSION
+          terraform --version
         working-directory: '${{ env.tf_working_dir }}'
 
       - name: Configure AWS credentials with OIDC
