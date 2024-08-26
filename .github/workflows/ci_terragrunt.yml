@@ -95,8 +95,12 @@ jobs:
         
       - name: Extract Terragrunt and Terraform Versions
         run: |
+          pwd
+          ls -al
           export TERRAGRUNT_VERSION=$(terragrunt locals --terragrunt-working-dir="./" | jq -r '.terragrunt_version')
           export TERRAFORM_VERSION=$(terragrunt locals --terragrunt-working-dir="./" | jq -r '.terraform_version')
+          pwd
+          ls -al
           echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
           echo "Using Terraform version: $TERRAFORM_VERSION"
 
@@ -107,6 +111,8 @@ jobs:
           tfenv install $TERRAFORM_VERSION
           tfenv use $TERRAFORM_VERSION
           terraform --version
+          pwd
+          ls -al
         working-directory: './'
 
 
