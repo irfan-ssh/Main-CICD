@@ -128,7 +128,7 @@ jobs:
             cd "$plan_dir"
             pwd
             ls -al
-        #    terragrunt show -no-color plan.output >> "$base_dir/plan_output"
+            # terragrunt show -no-color plan.output >> "$base_dir/plan_output"
             terragrunt show -no-color plan.output
             pwd
             ls -al
