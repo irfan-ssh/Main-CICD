@@ -131,19 +131,19 @@ jobs:
         shell: bash
         working-directory: '${{ env.tf_working_dir }}'
 
-      - id: format-plan
-        name: Format terragrunt plan to diff markdown
-        uses: traveloka/ghaction/infracicd-plan-diff-markdown@feature/nbay-terragrunt-workflow
-        with:
-          path: '${{ env.prd_plan_working_dir }}/plan_output'
+      # - id: format-plan
+      #   name: Format terragrunt plan to diff markdown
+      #   uses: traveloka/ghaction/infracicd-plan-diff-markdown@feature/nbay-terragrunt-workflow
+      #   with:
+      #     path: '${{ env.prd_plan_working_dir }}/plan_output'
 
-      - name: Post terragrunt command output onto pull request
-        uses: traveloka/ghaction/infracicd-pr-comment@feature/nbay-terragrunt-workflow
-        with:
-          collapse-terraform-output: ${{ vars.COLLAPSE_TERRAFORM_OUTPUT == '' && 'false' || vars.COLLAPSE_TERRAFORM_OUTPUT }}
-          environment: 'Production'
-          pr-number: ${{ github.event.number }}
-          terraform-command: 'plan'
-          terraform-output: ${{ steps.format-plan.outputs.formatted }}
-          working-dir: '${{ env.prd_plan_working_dir }}'
+      # - name: Post terragrunt command output onto pull request
+      #   uses: traveloka/ghaction/infracicd-pr-comment@feature/nbay-terragrunt-workflow
+      #   with:
+      #     collapse-terraform-output: ${{ vars.COLLAPSE_TERRAFORM_OUTPUT == '' && 'false' || vars.COLLAPSE_TERRAFORM_OUTPUT }}
+      #     environment: 'Production'
+      #     pr-number: ${{ github.event.number }}
+      #     terraform-command: 'plan'
+      #     terraform-output: ${{ steps.format-plan.outputs.formatted }}
+      #     working-dir: '${{ env.prd_plan_working_dir }}'
 
