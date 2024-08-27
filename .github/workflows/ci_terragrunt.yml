@@ -1,6 +1,5 @@
 name: CI_stage
-
-on:
+'on':
   workflow_call:
     inputs:
       STAGING_ACCOUNT_ID:
@@ -15,7 +14,7 @@ on:
       GHACTION_ROLE_NAME:
         required: false
         type: string
-        default: 'github-oidc-role'
+        default: github-oidc-role
       DIRECTORY_PATH:
         required: true
         type: string
@@ -26,7 +25,6 @@ on:
         required: true
       SSH_PRIVATE_KEY:
         required: true
-
 jobs:
   terragrunt:
     name: Terraform with Terragrunt
@@ -35,39 +33,18 @@ jobs:
       image: 'ghcr.io/irfan-ssh/terragrunt-docker-image:latest'
     env:
       TERRAGRUNT_TFPATH: /usr/local/bin/terraform
-      tf_working_dir: ${{ inputs.DIRECTORY_PATH }}
-
+      tf_working_dir: '${{ inputs.DIRECTORY_PATH }}'
     permissions:
       id-token: write
       contents: read
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      # - name: Set up SSH
-      #   uses: webfactory/ssh-agent@v0.5.3
-      #   with:
-      #     ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      # - name: Create .ssh directory
-      #   run: |
-      #     mkdir -p ~/.ssh
-      #     chmod 700 ~/.ssh
-
-      # - name: Remove old GitHub key from known_hosts
-      #   run: |
-      #     ssh-keygen -R github.com || true
-
-      # - name: Add new GitHub key to known_hosts
-      #   run: |
-      #     ssh-keyscan github.com >> ~/.ssh/known_hosts
-      #     chmod 600 ~/.ssh/known_hosts
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
-        
-      - name: Set Terragrunt and Terraform Versions from .terragrunt-version and .terraform-version
+      - name: >-
+          Set Terragrunt and Terraform Versions from .terragrunt-version and
+          .terraform-version
         run: |
           TERRAGRUNT_VERSION=$(cat .terragrunt-version)
           echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
@@ -80,41 +57,52 @@ jobs:
           tfenv install $TERRAFORM_VERSION
           tfenv use $TERRAFORM_VERSION
           terraform --version
-        working-directory: './'
-
+        working-directory: ./
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ inputs.STAGING_ACCOUNT_ID }}:role/${{ inputs.GHACTION_ROLE_NAME }}
+          role-to-assume: >-
+            arn:aws:iam::${{ inputs.STAGING_ACCOUNT_ID }}:role/${{
+            inputs.GHACTION_ROLE_NAME }}
           role-session-name: GitHubActions
           aws-region: '${{ secrets.AWS_REGION }}'
-
       - name: Run HCL Format
         run: |
           terragrunt run-all hclfmt
         working-directory: '${{ env.tf_working_dir }}'
-
       - name: TERRAGRUNT INIT
-        run: |
+        run: >
           pwd
+
           echo "current working directory path:"
-          terragrunt run-all init -terragrunt-provider-cache --terragrunt-non-interactive
+
+          terragrunt run-all init -terragrunt-provider-cache
+          --terragrunt-non-interactive
+
           echo "Terragrunt init completed."
+
           pwd
+
           ls -ashl
+
           echo "Searching for .terragrunt cache..."
         working-directory: '${{ env.tf_working_dir }}'
-
       - name: TERRAGRUNT PLAN
-        run: | 
+        run: >
           pwd
+
           echo "current working direcotry path::"
+
           pwd
+
           terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
-        # terragrunt show -no-color plan.output >> plan_output
+          # terragrunt show -no-color plan.output >> plan_output
           echo "current working direcotry path::"
+
           pwd
+
           ls -ashl
+
           echo "Searching for plan.output..."
         working-directory: '${{ env.tf_working_dir }}'
       - name: FIND PLAN OUTPUT
