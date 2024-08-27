@@ -156,7 +156,7 @@ jobs:
           
           # Optional: List the contents of the mainplan.output file
           echo "Contents of mainplan.output:"
-          cat "$base_dir/mainplan.output"
+          cat -no-color "$base_dir/mainplan.output"
         
         shell: bash
         working-directory: '${{ env.tf_working_dir }}'
