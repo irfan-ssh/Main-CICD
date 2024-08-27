@@ -138,37 +138,25 @@ jobs:
       #   shell: sh -e {0}
       - name: TERRAGRUNT PLAN, COPY, MERGE AND SHOW OUTPUTS
         run: |
-          # Define the base directory from the environment variable
           base_dir='${{ env.tf_working_dir }}'
           
-          # Print the base directory to verify it's correct
-          echo "Base directory is: $base_dir"
-          
-          # Ensure the base directory exists
-          mkdir -p "$base_dir"
-          
-          # Run Terragrunt plan command
           terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
           
-          # Create or clear the mainplan.output file
           touch "$base_dir/mainplan.output"
           > "$base_dir/mainplan.output"
           
-          # Find all plan.output files and copy their content to the mainplan.output file
-          find . -name "plan.output" -exec sh -c '
-            for file_path do
-              # Append the content of each plan.output to the mainplan.output
-              cat "$file_path" >> "$base_dir/mainplan.output"
-              echo "\n\n# Content from $file_path\n" >> "$base_dir/mainplan.output"
-            done
-          ' sh {} +
+          find "$base_dir" -name "plan.output" | while read -r file; do
+            echo "Processing: $file" >> "$base_dir/mainplan.output"
+            echo "------------------------" >> "$base_dir/mainplan.output"
+            cat "$file" >> "$base_dir/mainplan.output"
+            echo -e "\n\n" >> "$base_dir/mainplan.output"
+          done
           
-          # Show the merged output using Terragrunt
           cd "$base_dir"
-          terragrunt show -no-color mainplan.output >> plan_output
+          terragrunt show -no-color mainplan.output > plan_output
           
-          # Optional: List the contents of the plan_output file
           echo "Final Terragrunt show output:"
           cat "$base_dir/plan_output"
         
-        shell: sh -e {0}
+        shell: bash
+        working-directory: '${{ env.tf_working_dir }}'
