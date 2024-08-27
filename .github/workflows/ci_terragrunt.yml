@@ -111,14 +111,28 @@ jobs:
           base_dir='${{ env.tf_working_dir }}'
           
           # Ensure the base directory exists
+          echo "Ensuring base directory exists: $base_dir"
           mkdir -p "$base_dir"
+          
+          # Check if the directory was created
+          if [ ! -d "$base_dir" ]; then
+            echo "Error: Base directory was not created."
+            exit 1
+          fi
           
           # Run Terragrunt plan command
           terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
           
           # Clear or create the final plan_output file
+          echo "Creating or clearing the plan_output file."
           touch "$base_dir/plan_output"
           > "$base_dir/plan_output"
+          
+          # Check if the file was created
+          if [ ! -f "$base_dir/plan_output" ]; then
+            echo "Error: plan_output file was not created."
+            exit 1
+          fi
           
           # Find all directories with plan.output files and run terragrunt show
           find . -name "plan.output" | while read -r file; do
@@ -144,3 +158,4 @@ jobs:
         
         shell: bash
         working-directory: '${{ env.tf_working_dir }}'
+
