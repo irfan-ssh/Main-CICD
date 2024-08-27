@@ -135,10 +135,13 @@ jobs:
             done
           ' sh {} +
         
-          # Optional: List the contents of the mainplan.output file
-          echo "Combined plan output:"
+        shell: sh -e {0}
+      
+      - name: SHOW MAINPLAN.OUTPUT CONTENT
+        run: |
+          base_dir='${{ env.tf_working_dir }}'
+          echo "Contents of mainplan.output:"
           cat "$base_dir/mainplan.output"
-        
         shell: sh -e {0}
       
       - name: SHOW TERRAGRUNT OUTPUT
@@ -147,5 +150,4 @@ jobs:
           cd "$base_dir"
           terragrunt show -no-color mainplan.output >> plan_output
         shell: sh -e {0}
-
       
