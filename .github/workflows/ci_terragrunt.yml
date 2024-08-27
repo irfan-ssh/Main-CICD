@@ -67,63 +67,19 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         
-      # - name: Verify Terraform and Terragrunt Installation
-      #   run: |
-      #     tfenv install 1.8.5
-      #     tgenv install 0.60.0
-      #     tfenv use 1.8.5
-      #     tgenv use 0.60.0
-      #     terraform --version
-      #     terragrunt --version
-      #   working-directory: '${{ env.tf_working_dir }}'
-      # - name: Set Terragrunt and Terraform Versions from .terragrunt-version and .terraform-version
-      #   run: |
-      #     TERRAGRUNT_VERSION=$(cat .terragrunt-version)
-      #     echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
-      #     tgenv install $TERRAGRUNT_VERSION
-      #     tgenv use $TERRAGRUNT_VERSION
-      #     terragrunt --version
-
-      #     TERRAFORM_VERSION=$(cat .terraform-version)
-      #     echo "Using Terraform version: $TERRAFORM_VERSION"
-      #     tfenv install $TERRAFORM_VERSION
-      #     tfenv use $TERRAFORM_VERSION
-      #     terraform --version
-      #   working-directory: '${{ env.tf_working_dir }}'
-      # - name: Install jq
-      #   run: sudo apt-get install jq
-        
-      - name: Extract Terragrunt and Terraform Versions
+      - name: Set Terragrunt and Terraform Versions from .terragrunt-version and .terraform-version
         run: |
-          echo "Current directory:"
-          pwd
-          echo "Directory contents:"
-          ls -al
-
-          echo "Extracting Terragrunt and Terraform versions..."
-          terragrunt locals --terragrunt-working-dir="./" | jq .
-
-          export TERRAGRUNT_VERSION=$(terragrunt locals --terragrunt-working-dir="./" | jq -r '.terragrunt_version')
-          export TERRAFORM_VERSION=$(terragrunt locals --terragrunt-working-dir="./" | jq -r '.terraform_version')
-
+          TERRAGRUNT_VERSION=$(cat .terragrunt-version)
           echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
-          echo "Using Terraform version: $TERRAFORM_VERSION"
-
-          if [ -z "$TERRAGRUNT_VERSION" ] || [ -z "$TERRAFORM_VERSION" ]; then
-            echo "Error: Failed to extract version from terragrunt.hcl"
-            exit 1
-          fi
-
           tgenv install $TERRAGRUNT_VERSION
           tgenv use $TERRAGRUNT_VERSION
           terragrunt --version
 
+          TERRAFORM_VERSION=$(cat .terraform-version)
+          echo "Using Terraform version: $TERRAFORM_VERSION"
           tfenv install $TERRAFORM_VERSION
           tfenv use $TERRAFORM_VERSION
           terraform --version
-
-          echo "Final directory contents:"
-          ls -al
         working-directory: './'
 
       - name: Configure AWS credentials with OIDC

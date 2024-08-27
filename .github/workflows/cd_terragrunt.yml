@@ -56,15 +56,20 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
-      - name: Verify Terraform and Terragrunt Installation
+        - name: Set Terragrunt and Terraform Versions from .terragrunt-version and .terraform-version
         run: |
-          tfenv install 1.8.5
-          tgenv install 0.60.0
-          tfenv use 1.8.5
-          tgenv use 0.60.0
-          terraform --version
+          TERRAGRUNT_VERSION=$(cat .terragrunt-version)
+          echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
+          tgenv install $TERRAGRUNT_VERSION
+          tgenv use $TERRAGRUNT_VERSION
           terragrunt --version
-        working-directory: '${{ env.tf_working_dir }}'
+
+          TERRAFORM_VERSION=$(cat .terraform-version)
+          echo "Using Terraform version: $TERRAFORM_VERSION"
+          tfenv install $TERRAFORM_VERSION
+          tfenv use $TERRAFORM_VERSION
+          terraform --version
+        working-directory: './'
 
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
