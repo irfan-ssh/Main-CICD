@@ -87,24 +87,56 @@ jobs:
 
           echo "Searching for .terragrunt cache..."
         working-directory: '${{ env.tf_working_dir }}'
-      - name: TERRAGRUNT PLAN
-        run: >
-          pwd
-
-          echo "current working direcotry path::"
-
-          pwd
-
+      - name: TERRAGRUNT PLAN, COPY, MERGE AND SHOW OUTPUTS
+        run: |
+          base_dir='${{ github.workspace }}/live/stg'
+          
+          # یقینی بنائیں کہ بیس ڈائریکٹری موجود ہے
+          mkdir -p "$base_dir"
+          
+          # Terragrunt پلان چلائیں
           terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
-          # terragrunt show -no-color plan.output >> plan_output
-          echo "current working direcotry path::"
+          
+          # mainplan.output فائل بنائیں یا صاف کریں
+          touch "$base_dir/mainplan.output"
+          > "$base_dir/mainplan.output"
+          
+          # تمام plan.output فائلوں کو ڈھونڈیں اور ان کے مواد کو mainplan.output میں کاپی کریں
+          find "${{ github.workspace }}" -name "plan.output" | while read -r file; do
+            echo "Processing: $file" >> "$base_dir/mainplan.output"
+            echo "------------------------" >> "$base_dir/mainplan.output"
+            cat "$file" >> "$base_dir/mainplan.output"
+            echo -e "\n\n" >> "$base_dir/mainplan.output"
+          done
+          
+          # مرج شدہ آؤٹ پٹ کو Terragrunt کے ذریعے دکھائیں
+          cd "$base_dir"
+          terragrunt show -no-color mainplan.output > plan_output
+          
+          # آخری Terragrunt show آؤٹ پٹ کو دکھائیں
+          echo "Final Terragrunt show output:"
+          cat "$base_dir/plan_output"
+        
+        shell: bash
+        working-directory: '${{ github.workspace }}'
+      # - name: TERRAGRUNT PLAN
+      #   run: >
+      #     pwd
 
-          pwd
+      #     echo "current working direcotry path::"
 
-          ls -ashl
+      #     pwd
 
-          echo "Searching for plan.output..."
-        working-directory: '${{ env.tf_working_dir }}'
+      #     terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
+      #     # terragrunt show -no-color plan.output >> plan_output
+      #     echo "current working direcotry path::"
+
+      #     pwd
+
+      #     ls -ashl
+
+      #     echo "Searching for plan.output..."
+      #   working-directory: '${{ env.tf_working_dir }}'
       # - name: FIND PLAN OUTPUT
       #   run: |
       #     echo "Searching for plan.output file..."
@@ -136,28 +168,27 @@ jobs:
       #     ' sh {} +
         
       #   shell: sh -e {0}
-      - name: FIND, COPY, AND MERGE PLAN OUTPUTS
-        run: |
-          base_dir='${{ env.tf_working_dir }}'
+      # - name: FIND, COPY, AND MERGE PLAN OUTPUTS
+      #   run: |
+      #     base_dir='${{ env.tf_working_dir }}'
           
-          # Ensure the base directory exists
-          mkdir -p "$base_dir"
+      #     # Ensure the base directory exists
+      #     mkdir -p "$base_dir"
           
-          # Create or clear the mainplan.output file
-          > "$base_dir/mainplan.output"
+      #     # Create or clear the mainplan.output file
+      #     > "$base_dir/mainplan.output"
           
-          # Find all plan.output files and merge their content into mainplan.output
-          find . -name "plan.output" | while read -r file; do
-            echo "Processing: $file" >> "$base_dir/mainplan.output"
-            echo "------------------------" >> "$base_dir/mainplan.output"
-            cat "$file" >> "$base_dir/mainplan.output"
-            echo -e "\n\n" >> "$base_dir/mainplan.output"
-          done
+      #     # Find all plan.output files and merge their content into mainplan.output
+      #     find . -name "plan.output" | while read -r file; do
+      #       echo "Processing: $file" >> "$base_dir/mainplan.output"
+      #       echo "------------------------" >> "$base_dir/mainplan.output"
+      #       cat "$file" >> "$base_dir/mainplan.output"
+      #       echo -e "\n\n" >> "$base_dir/mainplan.output"
+      #     done
           
-          # Optional: List the contents of the mainplan.output file
-          echo "Contents of mainplan.output:"
-          cat "$base_dir/mainplan.output"
-          terragrunt show -no-color "$base_dir/mainplan.output" >> plan_output
+      #     # Optional: List the contents of the mainplan.output file
+      #     echo "Contents of mainplan.output:"
+      #     cat "$base_dir/mainplan.output"
         
-        shell: bash
-        working-directory: '${{ env.tf_working_dir }}'
+      #   shell: bash
+      #   working-directory: '${{ env.tf_working_dir }}'
