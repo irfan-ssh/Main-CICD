@@ -112,20 +112,29 @@ jobs:
           
           # Ensure the base directory exists
           mkdir -p "$base_dir"
-          
+          pwd
+          ls -al
           # Run Terragrunt plan command
           terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
           
           # Create or clear the plan_output file
           touch "$base_dir/plan_output"
           > "$base_dir/plan_output"
-          
+          pwd
+          ls -al
           # Find all plan.output files and show their content
           find . -name "plan.output" | while read -r file; do
             plan_dir=$(dirname "$file")
             cd "$plan_dir"
-            terragrunt show -no-color plan.output >> "$base_dir/plan_output"
+            pwd
+            ls -al
+        #    terragrunt show -no-color plan.output >> "$base_dir/plan_output"
+            terragrunt show -no-color plan.output
+            pwd
+            ls -al
             cd - > /dev/null
+            pwd
+            ls -al
           done
           
         shell: bash
