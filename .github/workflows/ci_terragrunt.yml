@@ -105,28 +105,29 @@ jobs:
 
           echo "Searching for plan.output..."
         working-directory: '${{ env.tf_working_dir }}'
-        
-      - name: FIND, COPY, AND MERGE PLAN OUTPUTS
+
+      - name: FIND, CONVERT, AND MERGE PLAN OUTPUTS
         run: |
           base_dir='${{ env.tf_working_dir }}'
           
           # Ensure the base directory exists
           mkdir -p "$base_dir"
           
-          # Create or clear the mainplan.output file
+          # Clear or create the mainplan.output file
           > "$base_dir/mainplan.output"
           
-          # Find all plan.output files and merge their content into mainplan.output
+          # Find all plan.output files and convert them to human-readable format
           find . -name "plan.output" | while read -r file; do
             echo "Processing: $file" >> "$base_dir/mainplan.output"
             echo "------------------------" >> "$base_dir/mainplan.output"
-            cat "$file" >> "$base_dir/mainplan.output"
+            terragrunt show "$file" >> "$base_dir/mainplan.output"
             echo -e "\n\n" >> "$base_dir/mainplan.output"
           done
           
-          # Optional: List the contents of the mainplan.output file
-          echo "Contents of mainplan.output:"
+          # Display the final combined output
+          echo "Final Combined Terragrunt Output:"
           cat "$base_dir/mainplan.output"
         
         shell: bash
         working-directory: '${{ env.tf_working_dir }}'
+
