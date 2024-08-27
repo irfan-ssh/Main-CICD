@@ -90,9 +90,10 @@ jobs:
           aws-region: '${{ secrets.AWS_REGION }}'
 
       - name: Run HCL Format
-        working-directory: '${{ env.tf_working_dir }}'
         run: |
           terragrunt run-all hclfmt
+        working-directory: '${{ env.tf_working_dir }}'
+
       - name: TERRAGRUNT INIT
         run: |
           pwd
@@ -109,9 +110,15 @@ jobs:
           pwd
           echo "current working direcotry path::"
           pwd
-          terragrunt run-all plan
+          terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
+        # terragrunt show -no-color plan.output >> plan_output
           echo "current working direcotry path::"
           pwd
           ls -ashl
           echo "Searching for plan.output..."
+        working-directory: '${{ env.tf_working_dir }}'
+      - name: FIND PLAN OUTPUT
+        run: |
+          echo "Searching for plan.output file..."
+          find . -name "plan.output" -print
         working-directory: '${{ env.tf_working_dir }}'
