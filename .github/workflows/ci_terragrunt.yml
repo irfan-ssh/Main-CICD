@@ -140,6 +140,12 @@ jobs:
           cat "$base_dir/mainplan.output"
         
         shell: sh -e {0}
-      
+      - name: TERRAGRUNT PLAN OUTPUT SHOW
+        run: |
+          ls -al
+          pwd
+          terragrunt show -no-color mainplan.output >> plan_output
+          cat mainplan.output
+        working-directory: '${{ env.tf_working_dir }}'
 
       
