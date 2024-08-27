@@ -56,7 +56,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
-        - name: Set Terragrunt and Terraform Versions from .terragrunt-version and .terraform-version
+      - name: Set Terragrunt and Terraform Versions from .terragrunt-version and .terraform-version
         run: |
           TERRAGRUNT_VERSION=$(cat .terragrunt-version)
           echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
