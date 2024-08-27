@@ -106,56 +106,44 @@ jobs:
       #     echo "Searching for plan.output..."
       #   working-directory: '${{ env.tf_working_dir }}'
 
-      - name: TERRAGRUNT PLAN, SHOW, AND MERGE OUTPUTS
+      - name: TERRAGRUNT PLAN AND SHOW
         run: |
           base_dir='${{ env.tf_working_dir }}'
           
           # Ensure the base directory exists
-          echo "Ensuring base directory exists: $base_dir"
           mkdir -p "$base_dir"
-          
-          # Check if the directory was created
-          if [ ! -d "$base_dir" ]; then
-            echo "Error: Base directory was not created."
-            exit 1
-          fi
           
           # Run Terragrunt plan command
           terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
           
-          # Clear or create the final plan_output file
-          echo "Creating or clearing the plan_output file."
+          # Create or clear the plan_output file
           touch "$base_dir/plan_output"
           > "$base_dir/plan_output"
           
-          # Check if the file was created
-          if [ ! -f "$base_dir/plan_output" ]; then
-            echo "Error: plan_output file was not created."
-            exit 1
-          fi
-          
-          # Find all directories with plan.output files and run terragrunt show
+          # Find all plan.output files and show their content
           find . -name "plan.output" | while read -r file; do
             plan_dir=$(dirname "$file")
-            echo "Processing plan in: $plan_dir"
-            
-            # Navigate to the directory containing the plan.output
             cd "$plan_dir"
-            
-            # Run terragrunt show and append output to plan_output in live/stg
             terragrunt show -no-color plan.output >> "$base_dir/plan_output"
-            
-            # Add a separator for clarity between different plans
-            echo -e "\n\n------------------------\n\n" >> "$base_dir/plan_output"
-            
-            # Go back to the root directory
             cd - > /dev/null
           done
           
-          # Display the final combined output
-          echo "Final Combined Terragrunt Output:"
-          cat "$base_dir/plan_output"
-        
         shell: bash
         working-directory: '${{ env.tf_working_dir }}'
+
+      - id: format-plan
+        name: Format terragrunt plan to diff markdown
+        uses: traveloka/ghaction/infracicd-plan-diff-markdown@feature/nbay-terragrunt-workflow
+        with:
+          path: '${{ env.prd_plan_working_dir }}/plan_output'
+
+      - name: Post terragrunt command output onto pull request
+        uses: traveloka/ghaction/infracicd-pr-comment@feature/nbay-terragrunt-workflow
+        with:
+          collapse-terraform-output: ${{ vars.COLLAPSE_TERRAFORM_OUTPUT == '' && 'false' || vars.COLLAPSE_TERRAFORM_OUTPUT }}
+          environment: 'Production'
+          pr-number: ${{ github.event.number }}
+          terraform-command: 'plan'
+          terraform-output: ${{ steps.format-plan.outputs.formatted }}
+          working-dir: '${{ env.prd_plan_working_dir }}'
 
