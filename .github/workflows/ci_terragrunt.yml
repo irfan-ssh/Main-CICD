@@ -140,11 +140,16 @@ jobs:
         run: |
           base_dir='${{ env.tf_working_dir }}'
           
+          # Ensure the base directory exists
+          mkdir -p "$base_dir"
+          
           terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
           
+          # Create or clear the mainplan.output file
           touch "$base_dir/mainplan.output"
           > "$base_dir/mainplan.output"
           
+          # Find and merge all plan.output files
           find "$base_dir" -name "plan.output" | while read -r file; do
             echo "Processing: $file" >> "$base_dir/mainplan.output"
             echo "------------------------" >> "$base_dir/mainplan.output"
