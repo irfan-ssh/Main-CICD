@@ -87,47 +87,61 @@ jobs:
 
           echo "Searching for .terragrunt cache..."
         working-directory: '${{ env.tf_working_dir }}'
-      - name: TERRAGRUNT PLAN
-        run: >
-          pwd
+      # - name: TERRAGRUNT PLAN
+      #   run: >
+      #     pwd
 
-          echo "current working direcotry path::"
+      #     echo "current working direcotry path::"
 
-          pwd
+      #     pwd
 
-          terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
-          # terragrunt show -no-color plan.output >> plan_output
-          echo "current working direcotry path::"
+      #     terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
+      #     # terragrunt show -no-color plan.output >> plan_output
+      #     echo "current working direcotry path::"
 
-          pwd
+      #     pwd
 
-          ls -ashl
+      #     ls -ashl
 
-          echo "Searching for plan.output..."
-        working-directory: '${{ env.tf_working_dir }}'
+      #     echo "Searching for plan.output..."
+      #   working-directory: '${{ env.tf_working_dir }}'
 
-      - name: FIND, CONVERT, AND MERGE PLAN OUTPUTS
+      - name: TERRAGRUNT PLAN, SHOW, AND MERGE OUTPUTS
         run: |
           base_dir='${{ env.tf_working_dir }}'
           
           # Ensure the base directory exists
           mkdir -p "$base_dir"
           
-          # Clear or create the mainplan.output file
-          > "$base_dir/mainplan.output"
+          # Run Terragrunt plan command
+          terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
           
-          # Find all plan.output files and convert them to human-readable format
+          # Clear or create the final plan_output file
+          > "$base_dir/plan_output"
+          
+          # Find all directories with plan.output files and run terragrunt show
           find . -name "plan.output" | while read -r file; do
-            echo "Processing: $file" >> "$base_dir/mainplan.output"
-            echo "------------------------" >> "$base_dir/mainplan.output"
-            terragrunt show "$file" >> "$base_dir/mainplan.output"
-            echo -e "\n\n" >> "$base_dir/mainplan.output"
+            plan_dir=$(dirname "$file")
+            echo "Processing plan in: $plan_dir"
+            
+            # Navigate to the directory containing the plan.output
+            cd "$plan_dir"
+            
+            # Run terragrunt show and append output to plan_output in live/stg
+            terragrunt show -no-color plan.output >> "$base_dir/plan_output"
+            
+            # Add a separator for clarity between different plans
+            echo -e "\n\n------------------------\n\n" >> "$base_dir/plan_output"
+            
+            # Go back to the root directory
+            cd - > /dev/null
           done
           
           # Display the final combined output
           echo "Final Combined Terragrunt Output:"
-          cat "$base_dir/mainplan.output"
+          cat "$base_dir/plan_output"
         
         shell: bash
         working-directory: '${{ env.tf_working_dir }}'
+      
 
