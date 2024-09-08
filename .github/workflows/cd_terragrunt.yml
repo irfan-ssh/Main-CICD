@@ -83,9 +83,10 @@ jobs:
         working-directory: '${{ env.tf_working_dir }}'
 
       # Download plan artifact
+            # Download plan artifact
       - name: Download plan artifact
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Using GitHub's default token
+          GH_TOKEN: ${{ secrets.PAT_WITH_ARTIFACT_ACCESS }}  # Use a PAT with necessary permissions
         run: |
           REPO="${GITHUB_REPOSITORY}"
           RUN_ID="${{ github.run_id }}"
@@ -107,6 +108,7 @@ jobs:
           unzip artifact.zip -d ${{ env.tf_working_dir }}
           rm artifact.zip
         working-directory: ${{ github.workspace }}
+
 
       # Terragrunt Apply
       - name: TERRAGRUNT APPLY
