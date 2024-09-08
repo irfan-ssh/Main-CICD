@@ -70,13 +70,20 @@ jobs:
             arn:aws:iam::${{ inputs.STAGING_ACCOUNT_ID }}:role/${{ inputs.GHACTION_ROLE_NAME }}
           role-session-name: GitHubActions
           aws-region: '${{ secrets.AWS_REGION }}'
-          
-      # Terraform Plan
-      - name: TERRAGRUNT PLAN
+
+      - name: TERRAGRUNT INIT
         run: |
           echo "current working directory path:"
-          terragrunt run-all plan -terragrunt-provider-cache --terragrunt-non-interactive -out=plan.output
+          terragrunt run-all init -terragrunt-provider-cache --terragrunt-non-interactive
+          echo "Terragrunt run-all init completed."
         working-directory: '${{ env.tf_working_dir }}'
+          
+      # Terraform Plan
+      # - name: TERRAGRUNT PLAN
+      #   run: |
+      #     echo "current working directory path:"
+      #     terragrunt run-all plan -terragrunt-provider-cache --terragrunt-non-interactive -out=plan.output
+      #   working-directory: '${{ env.tf_working_dir }}'
 
       # - name: TERRAGRUNT APPLY
       #   run: |
@@ -93,7 +100,7 @@ jobs:
 
       - name: TERRAGRUNT APPLY
         run: |
-          terragrunt run-all apply -no-color --terragrunt-non-interactive plan.output | tee apply.output
+          terragrunt run-all apply -no-color --terragrunt-non-interactive plan_output | tee apply.output
         working-directory: '${{ env.stg_plan_working_dir }}'
         
       - name: Clean up Terraform State
