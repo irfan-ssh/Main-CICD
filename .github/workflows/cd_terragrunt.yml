@@ -94,12 +94,30 @@ jobs:
 
       - name: Download plan artifact
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_WITH_ARTIFACT_ACCESS }}  # Use a PAT with necessary permissions
         run: |
-          artifact_id=$(gh api /repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/artifacts | jq '.artifacts[] | select(.name=="terragrunt-plan") | .id')
-          gh api /repos/${{ github.repository }}/actions/artifacts/$artifact_id/zip -H "Accept: application/vnd.github+json" --output artifact.zip
+          REPO="${GITHUB_REPOSITORY}"
+          RUN_ID="${{ github.event.workflow_run.id }}"
+          
+          echo "Fetching artifacts for workflow run: $RUN_ID"
+          ARTIFACTS=$(gh api /repos/$REPO/actions/runs/$RUN_ID/artifacts)
+          echo "Artifacts response: $ARTIFACTS"
+          
+          ARTIFACT_ID=$(echo $ARTIFACTS | jq -r '.artifacts[] | select(.name=="terragrunt-plan") | .id')
+          
+          if [ -z "$ARTIFACT_ID" ]; then
+            echo "No terragrunt-plan artifact found"
+            exit 1
+          fi
+          
+          echo "Downloading artifact ID: $ARTIFACT_ID"
+          gh api /repos/$REPO/actions/artifacts/$ARTIFACT_ID/zip -H "Accept: application/vnd.github+json" --output artifact.zip
+          
           unzip artifact.zip -d ${{ env.tf_working_dir }}
           rm artifact.zip
+        working-directory: ${{ github.workspace }}
+
+      - name: TERRAGRUNT PLAN
 
       - name: TERRAGRUNT APPLY
         run: |
