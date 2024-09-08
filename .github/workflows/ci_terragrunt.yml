@@ -34,17 +34,24 @@ jobs:
     env:
       TERRAGRUNT_TFPATH: /usr/local/bin/terraform
       tf_working_dir: '${{ inputs.DIRECTORY_PATH }}'
+
+    # Permissions
     permissions:
+      pull-requests: write
       id-token: write
       contents: read
+
     steps:
+      # Code repositories checkout
       - name: Checkout code
         uses: actions/checkout@v3
+
+        # Terraform setup
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
-      - name: >-
-          Set Terragrunt and Terraform Versions from .terragrunt-version and
-          .terraform-version
+
+        # Terraform and Terragrunt version form the root files .terragrunt-version and .terraform-version
+      - name: Set Terragrunt and Terraform Versions 
         run: |
           TERRAGRUNT_VERSION=$(cat .terragrunt-version)
           echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
@@ -58,93 +65,42 @@ jobs:
           tfenv use $TERRAFORM_VERSION
           terraform --version
         working-directory: ./
+
+        # AWS credentials configure
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: >-
-            arn:aws:iam::${{ inputs.STAGING_ACCOUNT_ID }}:role/${{
-            inputs.GHACTION_ROLE_NAME }}
+            arn:aws:iam::${{ inputs.STAGING_ACCOUNT_ID }}:role/${{ inputs.GHACTION_ROLE_NAME }}
           role-session-name: GitHubActions
           aws-region: '${{ secrets.AWS_REGION }}'
+
+        # Terrragrunt hclfm Format
       - name: Run HCL Format
         run: |
           terragrunt run-all hclfmt
         working-directory: '${{ env.tf_working_dir }}'
+
+        # Terragrunt initializatinon
       - name: TERRAGRUNT INIT
-        run: >
-          pwd
-
-          echo "current working directory path:"
-
-          terragrunt run-all init -terragrunt-provider-cache
-          --terragrunt-non-interactive
-
-          echo "Terragrunt init completed."
-
-          pwd
-
-          ls -ashl
-
-          echo "Searching for .terragrunt cache..."
-        working-directory: '${{ env.tf_working_dir }}'
-      # - name: TERRAGRUNT PLAN
-      #   run: >
-      #     pwd
-
-      #     echo "current working direcotry path::"
-
-      #     pwd
-
-      #     terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
-      #     # terragrunt show -no-color plan.output >> plan_output
-      #     echo "current working direcotry path::"
-
-      #     pwd
-
-      #     ls -ashl
-
-      #     echo "Searching for plan.output..."
-      #   working-directory: '${{ env.tf_working_dir }}'
-
-      - name: TERRAGRUNT PLAN AND SHOW
         run: |
-          base_dir='${{ env.tf_working_dir }}'
-          
-          # Ensure the base directory exists
-          mkdir -p "$base_dir"
-          pwd
-          ls -al
-          # Run Terragrunt plan command
-          terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
-          
-          # Create or clear the plan_output file
-          touch "$base_dir/plan_output"
-          > "$base_dir/plan_output"
-          pwd
-          ls -al
-          # Find all plan.output files and show their content
-          find . -name "plan.output" | while read -r file; do
-            plan_dir=$(dirname "$file")
-            cd "$plan_dir"
-            pwd
-            ls -al
-            # terragrunt show -no-color plan.output >> "$base_dir/plan_output"
-            terragrunt show -no-color plan.output
-            pwd
-            ls -al
-            cd - > /dev/null
-            pwd
-            ls -al
-          done
-          
-        shell: bash
+          echo "current working directory path:"
+          terragrunt run-all init -terragrunt-provider-cache --terragrunt-non-interactive
+          echo "Terragrunt run-all init completed."
         working-directory: '${{ env.tf_working_dir }}'
 
-      # - id: format-plan
-      #   name: Format terragrunt plan to diff markdown
-      #   uses: traveloka/ghaction/infracicd-plan-diff-markdown@feature/nbay-terragrunt-workflow
-      #   with:
-      #     path: '${{ env.prd_plan_working_dir }}/plan_output'
+        # Terragrunt plan + plan.output + show plan_output
+      - name: TERRAGRUNT PLAN
+        run: |
+          terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
+          terragrunt run-all show -no-color plan.output >> plan_output
+        working-directory: '${{ env.tf_working_dir }}'
+
+      - id: format-plan
+        name: Format terragrunt plan to diff markdown
+        uses: traveloka/ghaction/infracicd-plan-diff-markdown@feature/nbay-terragrunt-workflow
+        with:
+          path: '${{ env.prd_plan_working_dir }}/plan_output'
 
       # - name: Post terragrunt command output onto pull request
       #   uses: traveloka/ghaction/infracicd-pr-comment@feature/nbay-terragrunt-workflow
