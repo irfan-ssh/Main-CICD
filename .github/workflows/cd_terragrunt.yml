@@ -1,11 +1,30 @@
 name: CD_stage
-
 on:
-  workflow_run:
-    workflows: ["CI_stage"]
-    types:
-      - completed
-
+  workflow_call:
+    inputs:
+      STAGING_ACCOUNT_ID:
+        required: true
+        type: string
+      PRODUCTION_ACCOUNT_ID:
+        required: true
+        type: string
+      ENABLE_PROD:
+        required: false
+        type: string
+      GHACTION_ROLE_NAME:
+        required: false
+        type: string
+        default: github-oidc-role
+      DIRECTORY_PATH:
+        required: true
+        type: string
+    secrets:
+      AWS_ROLE_ARN:
+        required: true
+      AWS_REGION:
+        required: true
+      SSH_PRIVATE_KEY:
+        required: true
 jobs:
   terragrunt:
     name: Apply Terraform with Terragrunt
