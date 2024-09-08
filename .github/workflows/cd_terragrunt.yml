@@ -41,14 +41,54 @@ jobs:
     env:
       TERRAGRUNT_TFPATH: /usr/local/bin/terraform
       tf_working_dir: '${{ inputs.DIRECTORY_PATH }}'
+      GH_PAT: ${{ github.token }}
     permissions:
       id-token: write
       contents: read
       actions: read
     steps:
-      # (Previous steps remain unchanged)
+      # Repository checkout
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Download artifact
+      # Terraform Setup
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      # Set Terragrunt and Terraform Versions
+      - name: Set Terragrunt and Terraform Versions from .terragrunt-version and .terraform-version
+        run: |
+          TERRAGRUNT_VERSION=$(cat .terragrunt-version)
+          echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
+          tgenv install $TERRAGRUNT_VERSION
+          tgenv use $TERRAGRUNT_VERSION
+          terragrunt --version
+
+          TERRAFORM_VERSION=$(cat .terraform-version)
+          echo "Using Terraform version: $TERRAFORM_VERSION"
+          tfenv install $TERRAFORM_VERSION
+          tfenv use $TERRAFORM_VERSION
+          terraform --version
+        working-directory: ./
+
+      # Configure AWS credentials using OIDC
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: >-
+            arn:aws:iam::${{ inputs.STAGING_ACCOUNT_ID }}:role/${{ inputs.GHACTION_ROLE_NAME }}
+          role-session-name: GitHubActions
+          aws-region: '${{ secrets.AWS_REGION }}'
+
+      # Terragrunt Init
+      - name: TERRAGRUNT INIT
+        run: |
+          echo "Current working directory path: ${{ env.tf_working_dir }}"
+          terragrunt run-all init -terragrunt-provider-cache --terragrunt-non-interactive
+          echo "Terragrunt run-all init completed."
+        working-directory: '${{ env.tf_working_dir }}'
+
+        - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: terragrunt-plan
