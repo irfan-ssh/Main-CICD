@@ -19,6 +19,9 @@ name: CD_stage
       DIRECTORY_PATH:
         required: true
         type: string
+      CI_RUN_ID:
+        required: true
+        type: string
     secrets:
       AWS_ROLE_ARN:
         required: true
@@ -36,7 +39,7 @@ jobs:
     env:
       TERRAGRUNT_TFPATH: /usr/local/bin/terraform
       tf_working_dir: '${{ inputs.DIRECTORY_PATH }}'
-      GH_TOKEN: ${{ github.token }}  # Updated token
+      GH_TOKEN: ${{ github.token }}
     permissions:
       id-token: write
       contents: read
@@ -82,45 +85,12 @@ jobs:
           echo "Terragrunt run-all init completed."
         working-directory: '${{ env.tf_working_dir }}'
 
-      - name: Get latest successful workflow run
-        uses: actions/github-script@v6
-        id: get_latest_run
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            const workflow_name = "CI_stage";
-            const { owner, repo } = context.repo;
-            
-            const workflows = await github.rest.actions.listRepoWorkflows({
-              owner,
-              repo
-            });
-            
-            const workflow = workflows.data.workflows.find(w => w.name === workflow_name);
-            
-            if (!workflow) {
-              throw new Error(`Workflow "${workflow_name}" not found`);
-            }
-            
-            const runs = await github.rest.actions.listWorkflowRuns({
-              owner,
-              repo,
-              workflow_id: workflow.id,
-              status: 'success',
-              per_page: 1
-            });
-            
-            if (runs.data.total_count === 0) {
-              throw new Error(`No successful runs found for workflow "${workflow_name}"`);
-            }
-            
-            return runs.data.workflow_runs[0].id;
-
       - name: Download artifact
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh run download ${{ steps.get_latest_run.outputs.result }} -n terragrunt-plan -D ${{ env.tf_working_dir }}
+        uses: actions/download-artifact@v3
+        with:
+          name: terragrunt-plan
+          path: ${{ env.tf_working_dir }}
+          run-id: ${{ inputs.CI_RUN_ID }}
 
       - name: List downloaded files
         run: ls -la ${{ env.tf_working_dir }}
@@ -138,10 +108,12 @@ jobs:
       # Terragrunt Apply
       - name: TERRAGRUNT APPLY
         run: |
-          if [ -f plan_output ]; then
+          if [ -f plan.output ]; then
+            terragrunt run-all apply -no-color --terragrunt-non-interactive plan.output | tee apply.output
+          elif [ -f plan_output ]; then
             terragrunt run-all apply -no-color --terragrunt-non-interactive plan_output | tee apply.output
           else
-            echo "plan_output file not found. Contents of directory:"
+            echo "Neither plan.output nor plan_output file found. Contents of directory:"
             ls -la
             exit 1
           fi

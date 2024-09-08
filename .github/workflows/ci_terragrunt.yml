@@ -25,6 +25,10 @@ on:
         required: true
       SSH_PRIVATE_KEY:
         required: true
+    outputs:
+      ci_run_id:
+        description: "The run ID of this CI job"
+        value: ${{ jobs.terragrunt.outputs.ci_run_id }}
 
 jobs:
   terragrunt:
@@ -40,6 +44,9 @@ jobs:
     permissions:
       id-token: write
       contents: read
+
+    outputs:
+      ci_run_id: ${{ steps.output_run_id.outputs.ci_run_id }}
 
     steps:
       # Code repositories checkout
@@ -105,8 +112,8 @@ jobs:
             ${{ env.tf_working_dir }}/plan_output
 
       - name: Output Run ID
-        run: echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_OUTPUT
-        id: ci_run
+        id: output_run_id
+        run: echo "ci_run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
 
       - name: Get workflow run ID
         run: echo "WORKFLOW_RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
