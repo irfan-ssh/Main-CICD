@@ -100,7 +100,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: terragrunt-plan
-          path: ${{ env.stg_plan_working_dir }}/plan.output
+          path: ${{ env.tf_working_dir }}/plan.output
 
       # - id: format-plan
       #   name: Format terragrunt plan to diff markdown
