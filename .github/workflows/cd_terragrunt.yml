@@ -36,7 +36,7 @@ jobs:
     env:
       TERRAGRUNT_TFPATH: /usr/local/bin/terraform
       tf_working_dir: '${{ inputs.DIRECTORY_PATH }}'
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Updated token
+      GH_TOKEN: ${{ github.token }}  # Updated token
     permissions:
       id-token: write
       contents: read
@@ -84,32 +84,17 @@ jobs:
 
       # Download plan artifact
             # Download plan artifact
-      - name: Download plan artifact
-        env:
-          GH_TOKEN: ${{ secrets.PAT_WITH_ARTIFACT_ACCESS }}  # Use a PAT with necessary permissions
+      - name: Download an artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: terragrunt-plan
+          path: '${{ env.tf_working_dir }}'
         run: |
-          REPO="${GITHUB_REPOSITORY}"
-          RUN_ID="${{ github.run_id }}"
+          echo "Downloaded plan artifact."
+          ls -la
+          unzip -o terragrunt-plan.zip -d ${{ env.tf_working_dir }}/
+          rm terragrunt-plan.zip
           
-          echo "Fetching artifacts for workflow run: $RUN_ID"
-          ARTIFACTS=$(gh api /repos/$REPO/actions/runs/$RUN_ID/artifacts)
-          echo "Artifacts response: $ARTIFACTS"
-          
-          ARTIFACT_ID=$(echo $ARTIFACTS | jq -r '.artifacts[] | select(.name=="terragrunt-plan") | .id')
-          
-          if [ -z "$ARTIFACT_ID" ]; then
-            echo "No terragrunt-plan artifact found"
-            exit 1
-          fi
-          
-          echo "Downloading artifact ID: $ARTIFACT_ID"
-          gh api /repos/$REPO/actions/artifacts/$ARTIFACT_ID/zip -H "Accept: application/vnd.github+json" --output artifact.zip
-          
-          unzip artifact.zip -d ${{ env.tf_working_dir }}
-          rm artifact.zip
-        working-directory: ${{ github.workspace }}
-
-
       # Terragrunt Apply
       - name: TERRAGRUNT APPLY
         run: |
