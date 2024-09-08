@@ -98,10 +98,10 @@ jobs:
           echo "API Response:"
           echo "$response" | jq '.'
           
-          total_count=$(echo "$response" | jq '.total_count')
+          total_count=$(echo "$response" | jq '.total_count // 0')
           echo "Total artifacts: $total_count"
           
-          if [ "$total_count" -gt 0 ]; then
+          if [ "$total_count" != "0" ]; then
             echo "Available artifacts:"
             echo "$response" | jq '.artifacts[] | {name, expired, size_in_bytes}'
           else
