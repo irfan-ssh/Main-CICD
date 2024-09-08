@@ -86,7 +86,7 @@ jobs:
         working-directory: '${{ env.tf_working_dir }}'
 
       - name: Download artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: terragrunt-plan
           path: ${{ env.tf_working_dir }}
