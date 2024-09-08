@@ -88,7 +88,7 @@ jobs:
           echo "Terragrunt run-all init completed."
         working-directory: '${{ env.tf_working_dir }}'
 
-        - name: Download artifact
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: terragrunt-plan
