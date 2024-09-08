@@ -89,12 +89,15 @@ jobs:
         with:
           name: terragrunt-plan
           path: '${{ env.tf_working_dir }}'
+
+      - name: Unzip plan artifact
         run: |
           echo "Downloaded plan artifact."
           ls -la
           unzip -o terragrunt-plan.zip -d ${{ env.tf_working_dir }}/
           rm terragrunt-plan.zip
-          
+        working-directory: '${{ env.tf_working_dir }}'
+
       # Terragrunt Apply
       - name: TERRAGRUNT APPLY
         run: |

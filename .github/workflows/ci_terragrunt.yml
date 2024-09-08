@@ -101,9 +101,6 @@ jobs:
         with:
           name: terragrunt-plan
           path: ${{ env.tf_working_dir }}/plan_output
-        run: | 
-          ls -la
-          pwd
 
       # Terragrunt appl
       - name: Get workflow run ID
