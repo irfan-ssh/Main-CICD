@@ -36,21 +36,17 @@ jobs:
       TERRAGRUNT_TFPATH: /usr/local/bin/terraform
       tf_working_dir: '${{ inputs.DIRECTORY_PATH }}'
 
-    # Permissions
     permissions:
       id-token: write
       contents: read
 
     steps:
-      # Code repositories checkout
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Terraform setup
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
-      # Terraform and Terragrunt version form the root files .terragrunt-version and .terraform-version
       - name: Set Terragrunt and Terraform Versions 
         run: |
           TERRAGRUNT_VERSION=$(cat .terragrunt-version)
@@ -66,7 +62,6 @@ jobs:
           terraform --version
         working-directory: ./
 
-      # AWS credentials configure
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -75,13 +70,10 @@ jobs:
           role-session-name: GitHubActions
           aws-region: '${{ secrets.AWS_REGION }}'
 
-      # Terrragrunt hclfm Format
       - name: Run HCL Format
-        run: |
-          terragrunt run-all hclfmt
+        run: terragrunt run-all hclfmt
         working-directory: '${{ env.tf_working_dir }}'
 
-      # Terragrunt initializatinon
       - name: TERRAGRUNT INIT
         run: |
           echo "current working directory path:"
@@ -89,7 +81,6 @@ jobs:
           echo "Terragrunt run-all init completed."
         working-directory: '${{ env.tf_working_dir }}'
 
-      # Terragrunt plan + plan.output + show plan_output
       - name: TERRAGRUNT PLAN
         run: |
           terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
@@ -97,27 +88,13 @@ jobs:
         working-directory: '${{ env.tf_working_dir }}'
 
       - name: Upload plan artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: terragrunt-plan
-          path: ${{ env.tf_working_dir }}/plan_output
+          path: |
+            ${{ env.tf_working_dir }}/plan.output
+            ${{ env.tf_working_dir }}/plan_output
 
-      # Terragrunt appl
-      - name: Get workflow run ID
-        run: echo "WORKFLOW_RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
-
-      # - id: format-plan
-      #   name: Format terragrunt plan to diff markdown
-      #   uses: traveloka/ghaction/infracicd-plan-diff-markdown@feature/nbay-terragrunt-workflow
-      #   with:
-      #     path: '${{ env.tf_working_dir }}/plan_output'
-
-      # - name: Post terragrunt command output onto pull request
-      #   uses: traveloka/ghaction/infracicd-pr-comment@feature/nbay-terragrunt-workflow
-      #   with:
-      #     collapse-terraform-output: ${{ vars.COLLAPSE_TERRAFORM_OUTPUT == '' && 'false' || vars.COLLAPSE_TERRAFORM_OUTPUT }}
-      #     environment: 'Production'
-      #     pr-number: ${{ github.event.number }}
-      #     terraform-command: 'plan'
-      #     terraform-output: ${{ steps.format-plan.outputs.formatted }}
-      #     working-dir: '${{ env.prd_plan_working_dir }}'
+      - name: Set output
+        run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
+        id: ci_run

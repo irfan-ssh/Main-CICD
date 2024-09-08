@@ -1,31 +1,10 @@
 name: CD_stage
 
-'on':
-  workflow_call:
-    inputs:
-      STAGING_ACCOUNT_ID:
-        required: true
-        type: string
-      PRODUCTION_ACCOUNT_ID:
-        required: true
-        type: string
-      ENABLE_PROD:
-        required: false
-        type: string
-      GHACTION_ROLE_NAME:
-        required: false
-        type: string
-        default: github-oidc-role
-      DIRECTORY_PATH:
-        required: true
-        type: string
-    secrets:
-      AWS_ROLE_ARN:
-        required: true
-      AWS_REGION:
-        required: true
-      SSH_PRIVATE_KEY:
-        required: true
+on:
+  workflow_run:
+    workflows: ["CI_stage"]
+    types:
+      - completed
 
 jobs:
   terragrunt:
@@ -36,21 +15,21 @@ jobs:
     env:
       TERRAGRUNT_TFPATH: /usr/local/bin/terraform
       tf_working_dir: '${{ inputs.DIRECTORY_PATH }}'
-      GH_TOKEN: ${{ github.token }}  # Updated token
+      GH_TOKEN: ${{ github.token }}
+    
     permissions:
       id-token: write
       contents: read
+      actions: read
+
     steps:
-      # Repository checkout
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Terraform Setup
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
-      # Set Terragrunt and Terraform Versions
-      - name: Set Terragrunt and Terraform Versions from .terragrunt-version and .terraform-version
+      - name: Set Terragrunt and Terraform Versions
         run: |
           TERRAGRUNT_VERSION=$(cat .terragrunt-version)
           echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
@@ -65,7 +44,6 @@ jobs:
           terraform --version
         working-directory: ./
 
-      # Configure AWS credentials using OIDC
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -74,7 +52,6 @@ jobs:
           role-session-name: GitHubActions
           aws-region: '${{ secrets.AWS_REGION }}'
 
-      # Terragrunt Init
       - name: TERRAGRUNT INIT
         run: |
           echo "Current working directory path: ${{ env.tf_working_dir }}"
@@ -82,29 +59,40 @@ jobs:
           echo "Terragrunt run-all init completed."
         working-directory: '${{ env.tf_working_dir }}'
 
-      # Download plan artifact
-            # Download plan artifact
-      - name: Download an artifact
-        uses: actions/download-artifact@v3
+      - name: Download plan artifact
+        uses: dawidd6/action-download-artifact@v2
         with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: ci_terragrunt.yml
+          run_id: ${{github.event.workflow_run.id}}
           name: terragrunt-plan
-          path: '${{ env.tf_working_dir }}'
+          path: ${{ env.tf_working_dir }}
 
-      - name: Unzip plan artifact
+      - name: Check for plan files
         run: |
-          echo "Downloaded plan artifact."
-          ls -la
-          unzip -o terragrunt-plan.zip -d ${{ env.tf_working_dir }}/
-          rm terragrunt-plan.zip
+          if [ -f plan.output ] || [ -f plan_output ]; then
+            echo "Plan file found"
+          else
+            echo "Plan file not found. Directory contents:"
+            ls -la
+            echo "Workflow run ID: ${{github.event.workflow_run.id}}"
+            exit 1
+          fi
         working-directory: '${{ env.tf_working_dir }}'
 
-      # Terragrunt Apply
       - name: TERRAGRUNT APPLY
         run: |
-          terragrunt run-all apply -no-color --terragrunt-non-interactive plan_output | tee apply.output
+          if [ -f plan.output ]; then
+            terragrunt run-all apply -no-color --terragrunt-non-interactive plan.output | tee apply.output
+          elif [ -f plan_output ]; then
+            terragrunt run-all apply -no-color --terragrunt-non-interactive plan_output | tee apply.output
+          else
+            echo "Neither plan.output nor plan_output file found. Contents of directory:"
+            ls -la
+            exit 1
+          fi
         working-directory: '${{ env.tf_working_dir }}'
         
-      # Clean up Terraform State
       - name: Clean up Terraform State
         run: |
           terragrunt run-all refresh
