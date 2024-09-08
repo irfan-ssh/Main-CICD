@@ -83,19 +83,44 @@ jobs:
         working-directory: '${{ env.tf_working_dir }}'
 
       - name: Get latest successful workflow run
+        uses: actions/github-script@v6
         id: get_latest_run
-        run: |
-          WORKFLOW_ID=$(gh api repos/${{ github.repository }}/actions/workflows -q '.workflows[] | select(.name=="CI_stage") | .id')
-          LATEST_RUN=$(gh api repos/${{ github.repository }}/actions/workflows/$WORKFLOW_ID/runs?status=success -q '.workflow_runs[0].id')
-          echo "latest_run=$LATEST_RUN" >> $GITHUB_OUTPUT
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const workflow_name = "CI_stage";
+            const { owner, repo } = context.repo;
+            
+            const workflows = await github.rest.actions.listRepoWorkflows({
+              owner,
+              repo
+            });
+            
+            const workflow = workflows.data.workflows.find(w => w.name === workflow_name);
+            
+            if (!workflow) {
+              throw new Error(`Workflow "${workflow_name}" not found`);
+            }
+            
+            const runs = await github.rest.actions.listWorkflowRuns({
+              owner,
+              repo,
+              workflow_id: workflow.id,
+              status: 'success',
+              per_page: 1
+            });
+            
+            if (runs.data.total_count === 0) {
+              throw new Error(`No successful runs found for workflow "${workflow_name}"`);
+            }
+            
+            return runs.data.workflow_runs[0].id;
 
       - name: Download artifact
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh run download ${{ steps.get_latest_run.outputs.latest_run }} -n terragrunt-plan -D ${{ env.tf_working_dir }}
+          gh run download ${{ steps.get_latest_run.outputs.result }} -n terragrunt-plan -D ${{ env.tf_working_dir }}
 
       - name: List downloaded files
         run: ls -la ${{ env.tf_working_dir }}
