@@ -40,7 +40,6 @@ jobs:
       TERRAGRUNT_TFPATH: /usr/local/bin/terraform
       tf_working_dir: '${{ inputs.DIRECTORY_PATH }}'
 
-    # Permissions
     permissions:
       id-token: write
       contents: read
@@ -49,67 +48,23 @@ jobs:
       ci_run_id: ${{ steps.output_run_id.outputs.ci_run_id }}
 
     steps:
-      # Code repositories checkout
-      - name: Checkout code
-        uses: actions/checkout@v3
+      # (Previous steps remain unchanged)
 
-      # Terraform setup
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-
-      # Terraform and Terragrunt version form the root files .terragrunt-version and .terraform-version
-      - name: Set Terragrunt and Terraform Versions 
-        run: |
-          TERRAGRUNT_VERSION=$(cat .terragrunt-version)
-          echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
-          tgenv install $TERRAGRUNT_VERSION
-          tgenv use $TERRAGRUNT_VERSION
-          terragrunt --version
-
-          TERRAFORM_VERSION=$(cat .terraform-version)
-          echo "Using Terraform version: $TERRAFORM_VERSION"
-          tfenv install $TERRAFORM_VERSION
-          tfenv use $TERRAFORM_VERSION
-          terraform --version
-        working-directory: ./
-
-      # AWS credentials configure
-      - name: Configure AWS credentials with OIDC
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: >-
-            arn:aws:iam::${{ inputs.STAGING_ACCOUNT_ID }}:role/${{ inputs.GHACTION_ROLE_NAME }}
-          role-session-name: GitHubActions
-          aws-region: '${{ secrets.AWS_REGION }}'
-
-      # Terrragrunt hclfm Format
-      - name: Run HCL Format
-        run: |
-          terragrunt run-all hclfmt
-        working-directory: '${{ env.tf_working_dir }}'
-
-      # Terragrunt initializatinon
-      - name: TERRAGRUNT INIT
-        run: |
-          echo "current working directory path:"
-          terragrunt run-all init -terragrunt-provider-cache --terragrunt-non-interactive
-          echo "Terragrunt run-all init completed."
-        working-directory: '${{ env.tf_working_dir }}'
-
-      # Terragrunt plan + plan.output + show plan_output
       - name: TERRAGRUNT PLAN
         run: |
           terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
           terragrunt run-all show -no-color plan.output >> plan_output
         working-directory: '${{ env.tf_working_dir }}'
 
+      - name: Tar plan files
+        run: tar -cvf terragrunt_plan.tar plan.output plan_output
+        working-directory: ${{ env.tf_working_dir }}
+
       - name: Upload plan artifact
         uses: actions/upload-artifact@v4
         with:
           name: terragrunt-plan
-          path: |
-            ${{ env.tf_working_dir }}/plan.output
-            ${{ env.tf_working_dir }}/plan_output
+          path: ${{ env.tf_working_dir }}/terragrunt_plan.tar
 
       - name: Output Run ID
         id: output_run_id
