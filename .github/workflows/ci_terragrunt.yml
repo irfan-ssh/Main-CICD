@@ -100,10 +100,6 @@ jobs:
           terragrunt run-all show -no-color plan.output >> plan_output
         working-directory: '${{ env.tf_working_dir }}'
 
-      - name: Tar plan files
-        run: tar -cvf terragrunt_plan.tar plan.output plan_output
-        working-directory: ${{ env.tf_working_dir }}
-
       - name: Upload plan artifact
         uses: actions/upload-artifact@v4
         with:
