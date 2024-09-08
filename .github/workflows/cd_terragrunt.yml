@@ -38,13 +38,16 @@ jobs:
       id-token: write
       contents: read
     steps:
+      # Repository checkout
       - name: Checkout code
         uses: actions/checkout@v3
+        
+      # Terraform Setup
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
-      - name: >-
-          Set Terragrunt and Terraform Versions from .terragrunt-version and
-          .terraform-version
+
+      # Terraform Version
+      - name: Set Terragrunt and Terraform Versions from .terragrunt-version and .terraform-version
         run: |
           TERRAGRUNT_VERSION=$(cat .terragrunt-version)
           echo "Using Terragrunt version: $TERRAGRUNT_VERSION"
@@ -58,67 +61,32 @@ jobs:
           tfenv use $TERRAFORM_VERSION
           terraform --version
         working-directory: ./
+
+        # AWS Credentials
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: >-
-            arn:aws:iam::${{ inputs.STAGING_ACCOUNT_ID }}:role/${{
-            inputs.GHACTION_ROLE_NAME }}
+            arn:aws:iam::${{ inputs.STAGING_ACCOUNT_ID }}:role/${{ inputs.GHACTION_ROLE_NAME }}
           role-session-name: GitHubActions
           aws-region: '${{ secrets.AWS_REGION }}'
-      - name: TERRAGRUNT INIT
-        run: >
-          pwd
-
-          echo "current working directory path:"
-
-          terragrunt run-all init -terragrunt-provider-cache
-          --terragrunt-non-interactive
-
-          echo "Terragrunt init completed."
-
-          pwd
-
-          ls -ashl
-
-          echo "Searching for .terragrunt cache..."
+        
+        # Terraform Init
         working-directory: '${{ env.tf_working_dir }}'
       - name: TERRAGRUNT PLAN
-        run: >
-          pwd
-
+        run: |
           echo "current working directory path:"
+          terragrunt run-all plan -terragrunt-provider-cache --terragrunt-non-interactive -out=plan.output
 
-          terragrunt run-all plan -terragrunt-provider-cache
-          --terragrunt-non-interactive -out=plan.output
-
-          echo "Terragrunt plan completed."
-
-          pwd
-
-          ls -ashl
-
-          echo "Searching for plan.output..."
+        # Terraform Apply
         working-directory: '${{ env.tf_working_dir }}'
       - name: TERRAGRUNT APPLY
-        run: >
-          pwd
-
-          echo "current working directory path:"
-
-          terragrunt run-all apply -terragrunt-provider-cache
-          --terragrunt-non-interactive plan.output
-
-          echo "Terragrunt apply completed."
-
-          pwd
-
-          ls -ashl
-        working-directory: '${{ env.tf_working_dir }}'
-      - name: List Folder
         run: |
-          ls -al
+          echo "current working directory path:"
+          terragrunt run-all apply -terragrunt-provider-cache --terragrunt-non-interactive plan.output
+          echo "Terragrunt apply completed."
         working-directory: '${{ env.tf_working_dir }}'
+        
       - name: Clean up Terraform State
         run: |
           terragrunt run-all refresh
