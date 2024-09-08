@@ -96,12 +96,12 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: terragrunt-plan
-          path: ${{ env.stg_plan_working_dir }}
+          path: ${{ env.tf_working_dir }}
 
       - name: TERRAGRUNT APPLY
         run: |
           terragrunt run-all apply -no-color --terragrunt-non-interactive plan_output | tee apply.output
-        working-directory: '${{ env.stg_plan_working_dir }}'
+        working-directory: '${{ env.tf_working_dir }}'
         
       - name: Clean up Terraform State
         run: |
