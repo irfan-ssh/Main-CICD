@@ -90,7 +90,7 @@ jobs:
 
       - name: List artifacts
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           artifacts=$(gh api -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/runs/${{ inputs.CI_RUN_ID }}/artifacts)
           echo "Available artifacts:"
