@@ -117,8 +117,6 @@ jobs:
           rm artifact.zip
         working-directory: ${{ github.workspace }}
 
-      - name: TERRAGRUNT PLAN
-
       - name: TERRAGRUNT APPLY
         run: |
           terragrunt run-all apply -no-color --terragrunt-non-interactive plan_output | tee apply.output
