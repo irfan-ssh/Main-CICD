@@ -100,8 +100,12 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: terragrunt-plan
-          path: path/to/plan_output
-      
+          path: ${{ env.tf_working_dir }}/plan_output
+        run: | 
+          ls -la
+          pwd
+
+      # Terragrunt appl
       - name: Get workflow run ID
         run: echo "WORKFLOW_RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
 
