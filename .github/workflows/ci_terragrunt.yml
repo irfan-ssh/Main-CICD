@@ -1,34 +1,15 @@
 name: CI_stage
 on:
-  workflow_call:
-    inputs:
-      STAGING_ACCOUNT_ID:
-        required: true
-        type: string
-      PRODUCTION_ACCOUNT_ID:
-        required: true
-        type: string
-      ENABLE_PROD:
-        required: false
-        type: string
-      GHACTION_ROLE_NAME:
-        required: false
-        type: string
-        default: github-oidc-role
-      DIRECTORY_PATH:
-        required: true
-        type: string
-    secrets:
-      AWS_ROLE_ARN:
-        required: true
-      AWS_REGION:
-        required: true
-      SSH_PRIVATE_KEY:
-        required: true
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  terragrunt:
-    name: Terraform with Terragrunt
+  terragrunt_plan:
+    name: Terraform with Terragrunt Plan
     runs-on: ubuntu-latest
     container:
       image: 'ghcr.io/irfan-ssh/terragrunt-docker-image:latest'
@@ -62,13 +43,11 @@ jobs:
           terraform --version
         working-directory: ./
 
-      - name: Configure AWS credentials with OIDC
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: >-
-            arn:aws:iam::${{ inputs.STAGING_ACCOUNT_ID }}:role/${{ inputs.GHACTION_ROLE_NAME }}
-          role-session-name: GitHubActions
-          aws-region: '${{ secrets.AWS_REGION }}'
+          role-to-assume: arn:aws:iam::${{ inputs.STAGING_ACCOUNT_ID }}:role/${{ inputs.GHACTION_ROLE_NAME }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Run HCL Format
         run: terragrunt run-all hclfmt
@@ -95,6 +74,22 @@ jobs:
             ${{ env.tf_working_dir }}/plan.output
             ${{ env.tf_working_dir }}/plan_output
 
-      - name: Set output
-        run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
-        id: ci_run
+    outputs:
+      plan_created: ${{ steps.plan.outputs.plan_created }}
+
+  call_cd_workflow:
+    needs: terragrunt_plan
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/cd_terragrunt.yml@main
+    with:
+      STAGING_ACCOUNT_ID: ${{ inputs.STAGING_ACCOUNT_ID }}
+      PRODUCTION_ACCOUNT_ID: ${{ inputs.PRODUCTION_ACCOUNT_ID }}
+      ENABLE_PROD: ${{ inputs.ENABLE_PROD }}
+      GHACTION_ROLE_NAME: ${{ inputs.GHACTION_ROLE_NAME }}
+      DIRECTORY_PATH: ${{ inputs.DIRECTORY_PATH }}
+    secrets:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+    permissions:
+      id-token: write
+      contents: read

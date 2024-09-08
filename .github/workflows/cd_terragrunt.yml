@@ -1,4 +1,5 @@
 name: CD_stage
+
 on:
   workflow_call:
     inputs:
@@ -19,14 +20,13 @@ on:
         required: true
         type: string
     secrets:
-      AWS_ROLE_ARN:
-        required: true
       AWS_REGION:
         required: true
       SSH_PRIVATE_KEY:
         required: true
+
 jobs:
-  terragrunt:
+  terragrunt_apply:
     name: Apply Terraform with Terragrunt
     runs-on: ubuntu-latest
     container:
@@ -34,12 +34,10 @@ jobs:
     env:
       TERRAGRUNT_TFPATH: /usr/local/bin/terraform
       tf_working_dir: '${{ inputs.DIRECTORY_PATH }}'
-      GH_TOKEN: ${{ github.token }}
     
     permissions:
       id-token: write
       contents: read
-      actions: read
 
     steps:
       - name: Checkout code
@@ -63,13 +61,11 @@ jobs:
           terraform --version
         working-directory: ./
 
-      - name: Configure AWS credentials with OIDC
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: >-
-            arn:aws:iam::${{ inputs.STAGING_ACCOUNT_ID }}:role/${{ inputs.GHACTION_ROLE_NAME }}
-          role-session-name: GitHubActions
-          aws-region: '${{ secrets.AWS_REGION }}'
+          role-to-assume: arn:aws:iam::${{ inputs.STAGING_ACCOUNT_ID }}:role/${{ inputs.GHACTION_ROLE_NAME }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: TERRAGRUNT INIT
         run: |
@@ -79,11 +75,8 @@ jobs:
         working-directory: '${{ env.tf_working_dir }}'
 
       - name: Download plan artifact
-        uses: dawidd6/action-download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
-          github_token: ${{secrets.GITHUB_TOKEN}}
-          workflow: ci_terragrunt.yml
-          run_id: ${{github.event.workflow_run.id}}
           name: terragrunt-plan
           path: ${{ env.tf_working_dir }}
 
@@ -94,7 +87,6 @@ jobs:
           else
             echo "Plan file not found. Directory contents:"
             ls -la
-            echo "Workflow run ID: ${{github.event.workflow_run.id}}"
             exit 1
           fi
         working-directory: '${{ env.tf_working_dir }}'
