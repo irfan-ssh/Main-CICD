@@ -82,22 +82,33 @@ jobs:
           echo "Terragrunt run-all init completed."
         working-directory: '${{ env.tf_working_dir }}'
 
-      # Download plan artifact
-      - name: Download an artifact
+      - name: Download plan artifact
         uses: actions/download-artifact@v3
         with:
           name: terragrunt-plan
-          path: '${{ env.tf_working_dir }}'
-
-      - name: Prepare plan artifact
+          path: ${{ env.tf_working_dir }}
+      
+      - name: List downloaded files
+        run: ls -la ${{ env.tf_working_dir }}
+      
+      - name: Process downloaded files
         run: |
-          echo "Downloaded plan artifact."
-          ls -la
+          cd ${{ env.tf_working_dir }}
           if [ -f terragrunt-plan.zip ]; then
-            unzip -o terragrunt-plan.zip -d ${{ env.tf_working_dir }}/
+            echo "Zip file found, unzipping..."
+            unzip terragrunt-plan.zip
             rm terragrunt-plan.zip
+          else
+            echo "No zip file found, assuming files are already unzipped."
           fi
-        working-directory: '${{ env.tf_working_dir }}'
+          
+          if [ -f plan.output ] || [ -f plan_output ]; then
+            echo "Plan file found"
+          else
+            echo "Plan file not found. Directory contents:"
+            ls -la
+            exit 1
+          fi
 
       # Terragrunt Apply
       - name: TERRAGRUNT APPLY
