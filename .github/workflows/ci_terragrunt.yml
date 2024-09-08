@@ -94,7 +94,7 @@ jobs:
           echo "Terragrunt run-all init completed."
         working-directory: '${{ env.tf_working_dir }}'
 
-        - name: TERRAGRUNT PLAN
+      - name: TERRAGRUNT PLAN
         run: |
           terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
           terragrunt run-all show -no-color plan.output >> plan_output
