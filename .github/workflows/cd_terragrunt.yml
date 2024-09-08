@@ -41,7 +41,7 @@ jobs:
       # Repository checkout
       - name: Checkout code
         uses: actions/checkout@v3
-        
+
       # Terraform Setup
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -70,9 +70,8 @@ jobs:
             arn:aws:iam::${{ inputs.STAGING_ACCOUNT_ID }}:role/${{ inputs.GHACTION_ROLE_NAME }}
           role-session-name: GitHubActions
           aws-region: '${{ secrets.AWS_REGION }}'
-        
-        # Terraform Init
-        working-directory: '${{ env.tf_working_dir }}'
+          
+      # Terraform Plan
       - name: TERRAGRUNT PLAN
         run: |
           echo "current working directory path:"
