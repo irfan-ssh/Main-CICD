@@ -97,26 +97,16 @@ jobs:
         working-directory: '${{ env.tf_working_dir }}'
 
       - name: Upload plan artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: terragrunt-plan
-          path: ${{ env.tf_working_dir }}/plan_output
-      
+          path: |
+            ${{ env.tf_working_dir }}/plan.output
+            ${{ env.tf_working_dir }}/plan_output
+
+      - name: Output Run ID
+        run: echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_OUTPUT
+        id: ci_run
+
       - name: Get workflow run ID
         run: echo "WORKFLOW_RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
-
-      # - id: format-plan
-      #   name: Format terragrunt plan to diff markdown
-      #   uses: traveloka/ghaction/infracicd-plan-diff-markdown@feature/nbay-terragrunt-workflow
-      #   with:
-      #     path: '${{ env.tf_working_dir }}/plan_output'
-
-      # - name: Post terragrunt command output onto pull request
-      #   uses: traveloka/ghaction/infracicd-pr-comment@feature/nbay-terragrunt-workflow
-      #   with:
-      #     collapse-terraform-output: ${{ vars.COLLAPSE_TERRAFORM_OUTPUT == '' && 'false' || vars.COLLAPSE_TERRAFORM_OUTPUT }}
-      #     environment: 'Production'
-      #     pr-number: ${{ github.event.number }}
-      #     terraform-command: 'plan'
-      #     terraform-output: ${{ steps.format-plan.outputs.formatted }}
-      #     working-dir: '${{ env.prd_plan_working_dir }}'

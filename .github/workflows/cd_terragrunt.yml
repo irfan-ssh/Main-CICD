@@ -82,31 +82,31 @@ jobs:
           echo "Terragrunt run-all init completed."
         working-directory: '${{ env.tf_working_dir }}'
 
-      - name: Download plan artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: terragrunt-plan
-          path: ${{ env.tf_working_dir }}
-      
+        name: Get latest successful workflow run
+        id: get_latest_run
+        run: |
+          WORKFLOW_ID=$(gh api repos/${{ github.repository }}/actions/workflows -q '.workflows[] | select(.name=="CI_stage") | .id')
+          LATEST_RUN=$(gh api repos/${{ github.repository }}/actions/workflows/$WORKFLOW_ID/runs?status=success -q '.workflow_runs[0].id')
+          echo "latest_run=$LATEST_RUN" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run download ${{ steps.get_latest_run.outputs.latest_run }} -n terragrunt-plan -D ${{ env.tf_working_dir }}
+
       - name: List downloaded files
         run: ls -la ${{ env.tf_working_dir }}
-      
-      - name: Process downloaded files
+
+      - name: Check for plan files
         run: |
-          cd ${{ env.tf_working_dir }}
-          if [ -f terragrunt-plan.zip ]; then
-            echo "Zip file found, unzipping..."
-            unzip terragrunt-plan.zip
-            rm terragrunt-plan.zip
-          else
-            echo "No zip file found, assuming files are already unzipped."
-          fi
-          
-          if [ -f plan.output ] || [ -f plan_output ]; then
+          if [ -f ${{ env.tf_working_dir }}/plan.output ] || [ -f ${{ env.tf_working_dir }}/plan_output ]; then
             echo "Plan file found"
           else
             echo "Plan file not found. Directory contents:"
-            ls -la
+            ls -la ${{ env.tf_working_dir }}
             exit 1
           fi
 
