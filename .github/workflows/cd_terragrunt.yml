@@ -77,13 +77,14 @@ jobs:
           echo "current working directory path:"
           terragrunt run-all plan -terragrunt-provider-cache --terragrunt-non-interactive -out=plan.output
         working-directory: '${{ env.tf_working_dir }}'
+
       # - name: TERRAGRUNT APPLY
       #   run: |
       #     echo "current working directory path:"
       #     terragrunt run-all apply -terragrunt-provider-cache --terragrunt-non-interactive plan.output
       #     echo "Terragrunt apply completed."
       #   working-directory: '${{ env.tf_working_dir }}'
-      
+
       - name: Download plan artifact
         uses: actions/download-artifact@v2
         with:
