@@ -82,7 +82,7 @@ jobs:
           echo "Terragrunt run-all init completed."
         working-directory: '${{ env.tf_working_dir }}'
 
-        name: Get latest successful workflow run
+      - name: Get latest successful workflow run
         id: get_latest_run
         run: |
           WORKFLOW_ID=$(gh api repos/${{ github.repository }}/actions/workflows -q '.workflows[] | select(.name=="CI_stage") | .id')
