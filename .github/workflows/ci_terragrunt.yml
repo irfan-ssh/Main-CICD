@@ -104,7 +104,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: terragrunt-plan
-          path: ${{ env.tf_working_dir }}/plan_output
+          path: ${{ env.tf_working_dir }}/terragrunt-plan.tar
+          retention-days: 1
 
       - name: Output Run ID
         id: output_run_id
