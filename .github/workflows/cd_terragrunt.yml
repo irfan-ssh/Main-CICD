@@ -1,4 +1,5 @@
 name: CD_stage
+
 'on':
   workflow_call:
     inputs:
@@ -25,6 +26,7 @@ name: CD_stage
         required: true
       SSH_PRIVATE_KEY:
         required: true
+
 jobs:
   terragrunt:
     name: Apply Terraform with Terragrunt
@@ -34,6 +36,7 @@ jobs:
     env:
       TERRAGRUNT_TFPATH: /usr/local/bin/terraform
       tf_working_dir: '${{ inputs.DIRECTORY_PATH }}'
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Updated token
     permissions:
       id-token: write
       contents: read
@@ -46,7 +49,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
-      # Terraform Version
+      # Set Terragrunt and Terraform Versions
       - name: Set Terragrunt and Terraform Versions from .terragrunt-version and .terraform-version
         run: |
           TERRAGRUNT_VERSION=$(cat .terragrunt-version)
@@ -62,7 +65,7 @@ jobs:
           terraform --version
         working-directory: ./
 
-        # AWS Credentials
+      # Configure AWS credentials using OIDC
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -71,33 +74,21 @@ jobs:
           role-session-name: GitHubActions
           aws-region: '${{ secrets.AWS_REGION }}'
 
+      # Terragrunt Init
       - name: TERRAGRUNT INIT
         run: |
-          echo "current working directory path:"
+          echo "Current working directory path: ${{ env.tf_working_dir }}"
           terragrunt run-all init -terragrunt-provider-cache --terragrunt-non-interactive
           echo "Terragrunt run-all init completed."
         working-directory: '${{ env.tf_working_dir }}'
-          
-      # Terraform Plan
-      # - name: TERRAGRUNT PLAN
-      #   run: |
-      #     echo "current working directory path:"
-      #     terragrunt run-all plan -terragrunt-provider-cache --terragrunt-non-interactive -out=plan.output
-      #   working-directory: '${{ env.tf_working_dir }}'
 
-      # - name: TERRAGRUNT APPLY
-      #   run: |
-      #     echo "current working directory path:"
-      #     terragrunt run-all apply -terragrunt-provider-cache --terragrunt-non-interactive plan.output
-      #     echo "Terragrunt apply completed."
-      #   working-directory: '${{ env.tf_working_dir }}'
-
+      # Download plan artifact
       - name: Download plan artifact
         env:
-          GH_TOKEN: ${{ secrets.PAT_WITH_ARTIFACT_ACCESS }}  # Use a PAT with necessary permissions
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Using GitHub's default token
         run: |
           REPO="${GITHUB_REPOSITORY}"
-          RUN_ID="${{ github.event.workflow_run.id }}"
+          RUN_ID="${{ github.run_id }}"
           
           echo "Fetching artifacts for workflow run: $RUN_ID"
           ARTIFACTS=$(gh api /repos/$REPO/actions/runs/$RUN_ID/artifacts)
@@ -117,11 +108,13 @@ jobs:
           rm artifact.zip
         working-directory: ${{ github.workspace }}
 
+      # Terragrunt Apply
       - name: TERRAGRUNT APPLY
         run: |
           terragrunt run-all apply -no-color --terragrunt-non-interactive plan_output | tee apply.output
         working-directory: '${{ env.tf_working_dir }}'
         
+      # Clean up Terraform State
       - name: Clean up Terraform State
         run: |
           terragrunt run-all refresh
