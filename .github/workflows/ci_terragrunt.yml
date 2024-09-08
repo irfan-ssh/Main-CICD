@@ -96,6 +96,12 @@ jobs:
           terragrunt run-all show -no-color plan.output >> plan_output
         working-directory: '${{ env.tf_working_dir }}'
 
+        - name: Upload plan artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: terragrunt-plan
+          path: ${{ env.stg_plan_working_dir }}/plan.output
+
       # - id: format-plan
       #   name: Format terragrunt plan to diff markdown
       #   uses: traveloka/ghaction/infracicd-plan-diff-markdown@feature/nbay-terragrunt-workflow
