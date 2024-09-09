@@ -107,8 +107,13 @@ jobs:
       - name: TERRAGRUNT PLAN
         run: |
           terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
-          terragrunt run-all show -no-color plan.output >> plan_output
-          mv plan_output ./
-          pwd 
-          ls -al 
+          terragrunt run-all show -no-color plan.output > plan_output
+          echo "Current directory:"
+          pwd
+          echo "Looking for plan_output file:"
+          find . -name plan_output
+          echo "Moving plan_output file:"
+          find . -name plan_output -exec mv {} ./ \;
+          echo "Contents of current directory:"
+          ls -al
         working-directory: '${{ env.tf_working_dir }}'
