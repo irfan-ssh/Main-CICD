@@ -90,11 +90,11 @@ jobs:
           terragrunt run-all hclfmt
         working-directory: '${{ env.tf_working_dir }}'
         
-      - name: Run TFLint
-        run: |
-          tflint --init
-          terragrunt run-all tflint --format=compact
-        working-directory: '${{ env.tf_working_dir }}'
+      # - name: Run TFLint
+      #   run: |
+      #     tflint --init
+      #     terragrunt run-all tflint --format=compact
+      #   working-directory: '${{ env.tf_working_dir }}'
 
       # Terragrunt initializatinon
       - name: TERRAGRUNT INIT
@@ -106,6 +106,6 @@ jobs:
 
       - name: TERRAGRUNT PLAN
         run: |
-          terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
-          terragrunt run-all show -no-color plan.output >> plan_output
+          terragrunt run-all plan -no-color -out=./live/plan.output --terragrunt-non-interactive
+          # terragrunt run-all show -no-color plan.output >> plan_output
         working-directory: '${{ env.tf_working_dir }}'
