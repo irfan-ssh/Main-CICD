@@ -118,5 +118,6 @@ jobs:
           echo "Contents of current directory:"
           ls -al
           cd output
+          ls -al
           cat plan_output
         working-directory: '${{ env.tf_working_dir }}'
