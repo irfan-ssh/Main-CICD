@@ -112,8 +112,9 @@ jobs:
           pwd
           echo "Looking for plan_output file:"
           find . -name plan_output
+          mkdir -p ./output
           echo "Moving plan_output file:"
-          find . -name plan_output -exec mv {} ./ \;
+          find . -name plan_output -exec mv {} ./output/ \;
           echo "Contents of current directory:"
           ls -al
         working-directory: '${{ env.tf_working_dir }}'
