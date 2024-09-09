@@ -71,6 +71,10 @@ jobs:
           terraform --version
         working-directory: ./
 
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v3
+        with:
+          tflint_version: v0.44.1
       # AWS credentials configure
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
@@ -84,6 +88,12 @@ jobs:
       - name: Run HCL Format
         run: |
           terragrunt run-all hclfmt
+        working-directory: '${{ env.tf_working_dir }}'
+        
+      - name: Run TFLint
+        run: |
+          tflint --init
+          terragrunt run-all tflint --format=compact
         working-directory: '${{ env.tf_working_dir }}'
 
       # Terragrunt initializatinon
