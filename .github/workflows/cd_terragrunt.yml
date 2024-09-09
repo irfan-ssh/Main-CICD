@@ -81,77 +81,17 @@ jobs:
           aws-region: '${{ secrets.AWS_REGION }}'
 
       # Terragrunt Init
-      - name: TERRAGRUNT INIT
+      - name: TERRAGRUNT PLAN
         run: |
           echo "Current working directory path: ${{ env.tf_working_dir }}"
-          terragrunt run-all init -terragrunt-provider-cache --terragrunt-non-interactive
+          terragrunt run-all plan -terragrunt-provider-cache
           echo "Terragrunt run-all init completed."
         working-directory: '${{ env.tf_working_dir }}'
-
-      - name: List artifacts
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: |
-          response=$(curl -s -H "Authorization: token $GH_TOKEN" \
-                       -H "Accept: application/vnd.github+json" \
-                       "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ inputs.CI_RUN_ID }}/artifacts")
-          echo "API Response:"
-          echo "$response" | jq '.'
-          
-          total_count=$(echo "$response" | jq '.total_count // 0')
-          echo "Total artifacts: $total_count"
-          
-          if [ "$total_count" != "0" ]; then
-            echo "Available artifacts:"
-            echo "$response" | jq '.artifacts[] | {name, expired, size_in_bytes}'
-          else
-            echo "No artifacts found for this run."
-          fi
-          
-          echo "Workflow Run ID: ${{ inputs.CI_RUN_ID }}"
-          echo "Repository: ${{ github.repository }}"
-
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: terragrunt-plan
-          path: ${{ env.tf_working_dir }}
-          github-token: ${{ secrets.GH_PAT }}
-          repository: ${{ github.repository }}
-          run-id: ${{ inputs.CI_RUN_ID }}
-
-      - name: Untar plan files
-        run: |
-          tar -xvf terragrunt_plan.tar
-          rm terragrunt_plan.tar
-        working-directory: ${{ env.tf_working_dir }}
-
-      - name: List downloaded files
-        run: ls -la ${{ env.tf_working_dir }}
-
-      - name: Check for plan files
-        run: |
-          if [ -f plan.output ] || [ -f plan_output ]; then
-            echo "Plan file found"
-          else
-            echo "Plan file not found. Directory contents:"
-            ls -la
-            exit 1
-          fi
-        working-directory: ${{ env.tf_working_dir }}
 
       # Terragrunt Apply
       - name: TERRAGRUNT APPLY
         run: |
-          if [ -f plan.output ]; then
             terragrunt run-all apply -no-color --terragrunt-non-interactive plan.output | tee apply.output
-          elif [ -f plan_output ]; then
-            terragrunt run-all apply -no-color --terragrunt-non-interactive plan_output | tee apply.output
-          else
-            echo "Neither plan.output nor plan_output file found. Contents of directory:"
-            ls -la
-            exit 1
-          fi
         working-directory: '${{ env.tf_working_dir }}'
         
       # (Remaining steps unchanged)
