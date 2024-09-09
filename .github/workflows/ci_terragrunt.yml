@@ -117,4 +117,6 @@ jobs:
           find . -name plan_output -exec mv {} ./output/ \;
           echo "Contents of current directory:"
           ls -al
+          cd output
+          cat plan_output
         working-directory: '${{ env.tf_working_dir }}'
