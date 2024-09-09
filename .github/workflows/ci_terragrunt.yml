@@ -108,7 +108,7 @@ jobs:
         run: |
           terragrunt run-all plan -no-color -out=plan.output --terragrunt-non-interactive
           terragrunt run-all show -no-color plan.output >> plan_output
-          cp plan_output ./live/plan_output
+          mv plan_output ./
           pwd 
           ls -al 
         working-directory: '${{ env.tf_working_dir }}'
